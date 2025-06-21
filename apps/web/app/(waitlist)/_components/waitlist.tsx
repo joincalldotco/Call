@@ -106,7 +106,6 @@ function useWaitlistCount() {
       });
 
       toast.success("You're on the waitlist! 🎉");
-
     },
     onError: (error) => {
       const errorMessage =
@@ -180,7 +179,14 @@ export function WaitlistForm({ className }: WaitlistFormProps) {
         </form>
       )}
       <div className="relative flex flex-row items-center justify-center gap-3">
-        <span className="text-sm text-primary/80 sm:text-base">
+        <span
+          className="text-base sm:text-lg font-semibold text-emerald-500 
+  bg-white/10 dark:bg-white/5 
+  backdrop-blur-md rounded-full px-5 py-2 
+  shadow-lg dark:shadow-none 
+  border border-white/30 dark:border-white/10 
+  transition-all duration-300"
+        >
           <NumberFlow value={waitlist.count} /> people already joined the
           waitlist
         </span>
