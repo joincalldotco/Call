@@ -40,6 +40,12 @@ EOL
     fi
 fi
 
+# Symlink .env to packages/db if it doesn't exist
+if [ ! -f packages/db/.env ]; then
+    print_step "Linking root .env to packages/db..."
+    ln -s "$(realpath .env)" packages/db/.env
+    print_success "Linked .env to packages/db"
+fi
 
 if ! docker info > /dev/null 2>&1; then
     print_error "Docker is not running. Please start Docker first."
@@ -66,6 +72,16 @@ print_step "Waiting for PostgreSQL to be ready..."
 for i in {1..30}; do
     if docker compose exec -T postgres pg_isready -U postgres > /dev/null 2>&1; then
         print_success "PostgreSQL is ready"
+
+        print_step "Running database migration..."
+        pnpm --filter @call/db run db:migrate
+        if [ $? -eq 0 ]; then
+            print_success "Database migration completed successfully"
+        else
+            print_error "Database migration failed"
+            exit 1
+        fi
+
         break
     fi
     if [ $i -eq 30 ]; then
