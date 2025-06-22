@@ -12,15 +12,13 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { confettiBurst } from "@call/ui/lib/confetti";
+
 const formSchema = z.object({
   email: z.string().email(),
 });
 
-// this is a copy of Analogs waitlist component with some changes
-// https://github.com/analogdotnow/Analog/blob/main/apps/web/src/components/sections/home/waitlist-form.tsx
 type FormSchema = z.infer<typeof formSchema>;
 
-// API functions for Hono backend
 async function getWaitlistCount(): Promise<{ count: number }> {
   return fetch("/api/waitlist/count").then((res) => {
     if (!res.ok) {
@@ -44,60 +42,51 @@ async function joinWaitlist(email: string): Promise<void> {
   }
 }
 
-const LOCAL_STORAGE_KEY = "waitlist_count";
-const CACHE_DURATION = 2 * 60 * 60 * 1000;
+const getLocalStorageItem = (key: string): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const setLocalStorageItem = (key: string, value: string): void => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+};
 
 function useWaitlistCount() {
   const queryClient = useQueryClient();
   const [success, setSuccess] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const query = useQuery({
     queryKey: ["waitlist", "count"],
-    queryFn: async () => {
-      const cachedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (cachedData) {
-        try {
-          const { count, timestamp } = JSON.parse(cachedData);
-          const isExpired = Date.now() - timestamp > CACHE_DURATION;
-
-          if (!isExpired) {
-            return { count };
-          }
-        } catch (e) {
-          console.error("Error parsing waitlist cache:", e);
-        }
-      }
-
-      const data = await getWaitlistCount();
-
-      localStorage.setItem(
-        LOCAL_STORAGE_KEY,
-        JSON.stringify({
-          count: data.count,
-          timestamp: Date.now(),
-        })
-      );
-
-      return data;
-    },
-    staleTime: CACHE_DURATION,
-    gcTime: CACHE_DURATION * 2,
+    queryFn: getWaitlistCount,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    enabled: isClient,
   });
 
   const { mutate } = useMutation({
     mutationFn: (email: string) => joinWaitlist(email),
     onSuccess: () => {
       setSuccess(true);
+
+      queryClient.invalidateQueries({ queryKey: ["waitlist", "count"] });
+
       const newCount = (query.data?.count ?? 0) + 1;
       queryClient.setQueryData(["waitlist", "count"], { count: newCount });
-      // set localStorage with the new count
-      localStorage.setItem(
-        LOCAL_STORAGE_KEY,
-        JSON.stringify({
-          count: newCount,
-          timestamp: Date.now(),
-        })
-      );
+
+      setLocalStorageItem("waitlist_success", "true");
 
       confettiBurst({
         particleCount: 100,
@@ -106,7 +95,6 @@ function useWaitlistCount() {
       });
 
       toast.success("You're on the waitlist! 🎉");
-
     },
     onError: (error) => {
       const errorMessage =
@@ -134,21 +122,32 @@ export function WaitlistForm({ className }: WaitlistFormProps) {
 
   const waitlist = useWaitlistCount();
   const [localSuccess, setLocalSuccess] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     if (waitlist.success) {
-      localStorage.setItem("waitlist_success", "true");
+      setLocalStorageItem("waitlist_success", "true");
       setLocalSuccess(true);
     } else {
-      const stored = localStorage.getItem("waitlist_success");
+      const stored = getLocalStorageItem("waitlist_success");
       if (stored === "true") {
         setLocalSuccess(true);
       }
     }
-  }, [waitlist.success]);
+  }, [waitlist.success, isClient]);
 
   function handleJoinWaitlist({ email }: FormSchema) {
     waitlist.mutate(email);
+  }
+
+  if (!isClient) {
+    return null;
   }
 
   return (

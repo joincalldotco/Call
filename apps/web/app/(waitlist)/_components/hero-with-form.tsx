@@ -14,5 +14,4 @@ const HeroWithForm = () => {
     </div>
   );
 };
-// This component is a placeholder for the HeroWithForm section.
 export default HeroWithForm;

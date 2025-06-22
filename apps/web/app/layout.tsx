@@ -89,6 +89,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <script src="https://cdn.peasy.so/peasy.js" data-website-id="01jybpzkjn3xgyfj6x4dq51ftt" async></script>
       <body
         className={`${fontSans.variable} ${fontLora.variable} ${fontMono.variable} font-sans antialiased transition-all duration-300`}
       >
