@@ -5,7 +5,16 @@ import schema from "@call/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
-if (!process.env.FRONTEND_URL || !process.env.BACKEND_URL) {
+const {
+  FRONTEND_URL,
+  BACKEND_URL,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+} = process.env;
+
+if (!FRONTEND_URL || !BACKEND_URL) {
   throw new Error(
     "Missing environment variables. FRONTEND_URL or BACKEND_URL is not defined"
   );
@@ -19,7 +28,7 @@ export const auth = betterAuth({
     },
   }),
 
-  trustedOrigins: [process.env.FRONTEND_URL, process.env.BACKEND_URL],
+  trustedOrigins: [FRONTEND_URL, BACKEND_URL],
 
   emailAndPassword: {
     enabled: true,
@@ -29,26 +38,30 @@ export const auth = betterAuth({
     resetPasswordTokenExpiresIn: 600, // 10 minutes
     sendResetPassword: async ({ user, url }) => {
       const token = extractTokenFromUrl(url);
-      const frontendResetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+      const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
 
       await sendMail({
         to: user.email,
         subject: "Reset your password",
-        text: `Click the link to reset your password: ${frontendResetUrl}`,
+        text: `Click the link to reset your password: ${resetUrl}`,
       });
     },
   },
 
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      clientId: GOOGLE_CLIENT_ID!,
+      clientSecret: GOOGLE_CLIENT_SECRET!,
       scope: [
         // "https://www.googleapis.com/auth/userinfo.profile",
         // "https://www.googleapis.com/auth/userinfo.email",
       ],
       accessType: "offline",
       prompt: "consent",
+    },
+    github: {
+      clientId: GITHUB_CLIENT_ID!,
+      clientSecret: GITHUB_CLIENT_SECRET!,
     },
   },
 });

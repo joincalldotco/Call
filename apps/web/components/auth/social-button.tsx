@@ -5,24 +5,41 @@ import { Button } from "@call/ui/components/button";
 import { Icons } from "@call/ui/components/icons";
 
 const SocialButton = () => {
-  const handleGoogleLogin = async () => {
+  const handleSocialLogin = async (provider: "google" | "github") => {
     const { data } = await authClient.signIn.social({
-      provider: "google",
+      provider,
       callbackURL: process.env.NEXT_PUBLIC_CALLBACK_URL,
     });
-    console.log(data);
+
+    if (data?.url) {
+      window.location.href = data.url;
+    } else {
+      console.error("No redirect URL returned from auth client.");
+    }
   };
 
   return (
-    <Button
-      onClick={handleGoogleLogin}
-      variant="outline"
-      size="lg"
-      className="px-10!"
-    >
-      <Icons.google className="w-4 h-4" />
-      Continue with Google
-    </Button>
+    <div className="w-full space-y-2">
+      <Button
+        onClick={() => handleSocialLogin("google")}
+        variant="outline"
+        size="lg"
+        className="w-full"
+      >
+        <Icons.google className="w-4 h-4" />
+        Continue with Google
+      </Button>
+
+      <Button
+        onClick={() => handleSocialLogin("github")}
+        variant="outline"
+        size="lg"
+        className="w-full"
+      >
+        <Icons.github className="w-4 h-4" />
+        Continue with GitHub
+      </Button>
+    </div>
   );
 };
 

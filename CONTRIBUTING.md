@@ -54,6 +54,53 @@ Thank you for your interest in contributing to Call-SO! This document will guide
 
 2. The `.env` file is automatically loaded by the development script.
 
+## 🔑 Setting Up OAuth Providers
+
+You need to create OAuth applications in Google and GitHub to enable social login during development.
+
+### Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or use an existing one)
+3. Navigate to **APIs & Services > Credentials**
+4. Click **"Create Credentials" → OAuth 2.0 Client IDs**
+5. Select **Web Application** and configure:
+
+   **Authorized JavaScript origins**:
+
+```
+
+[http://localhost:3000](http://localhost:3000)
+
+```
+
+**Authorized redirect URIs**:
+
+```
+
+[http://localhost:1284/api/auth/callback/google](http://localhost:1284/api/auth/callback/google)
+
+```
+
+6. Copy the generated **Client ID** and **Client Secret** into your `.env` file.
+
+---
+
+### GitHub OAuth Setup
+
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Under **OAuth Apps**, click **"New OAuth App"**
+3. Fill in:
+
+- **Application Name**: `Call`
+- **Homepage URL**: `http://localhost:3000`
+- **Authorization Callback URL**:
+  ```
+  http://localhost:1284/api/auth/callback/github
+  ```
+
+4. Register the application, then copy the **Client ID** and **Client Secret** into your `.env`.
+
 ## 📦 Package Management
 
 We use pnpm workspaces to manage this monorepo. Key commands:
