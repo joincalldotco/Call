@@ -2,14 +2,16 @@ import { getSessionCookie } from "better-auth/cookies";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const protectedRoutes = ["/app"];
+const protectedRoutes = ["/app", /^\/r(?:\/.*)?$/i];
 const publicRoutes = new Set(["/", "/login"]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
+    typeof route === "string"
+      ? pathname.startsWith(route)
+      : route.test(pathname)
   );
   const isPublic = publicRoutes.has(pathname);
 

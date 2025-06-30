@@ -5,6 +5,7 @@ import { db } from "@call/db";
 import routes from "@/routes";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import { WebSocketServer } from "./websocket-server";
 
 export interface ReqVariables {
   user: typeof auth.$Infer.Session.user | null;
@@ -43,7 +44,7 @@ app.use("*", async (c, next) => {
 
 app.route("/api", routes);
 
-export default {
-  port: 1284,
-  fetch: app.fetch,
-};
+// Initialize WebSocket server
+new WebSocketServer();
+
+export default app;
