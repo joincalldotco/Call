@@ -14,7 +14,10 @@ export async function GET(req: NextRequest) {
   const username = searchParams.get("username");
 
   if (!room || !username) {
-    return NextResponse.json({ error: "Missing room or username" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing room or username" },
+      { status: 400 }
+    );
   }
 
   // Create a LiveKit access token
@@ -25,4 +28,4 @@ export async function GET(req: NextRequest) {
   const token = await at.toJwt();
 
   return NextResponse.json({ token });
-} 
+}

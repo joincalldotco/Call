@@ -11,14 +11,12 @@ const Page = () => {
     <div className="w-full min-h-screen bg-[#101010] flex">
       {/* Sidebar */}
       <aside className="w-1/6 bg-[#101010]">
-      <SideBar />
+        <SideBar />
       </aside>
       {/* Dashboard */}
-      <main className="border">
-      </main>
+      <main className="border"></main>
     </div>
   );
 };
 
 export default Page;
-
