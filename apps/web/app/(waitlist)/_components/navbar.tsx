@@ -43,6 +43,9 @@ const Navbar = () => {
           <span className="text-primary font-lora">Call</span>
         </h1>
         <div className="flex items-center gap-2">
+          <Button className=" bg-[#202020] text-white hover:bg-muted-foreground/10">
+            <Link href="/r">Demo</Link>
+          </Button>
           {links.map((link) => (
             <Button
               size="icon"

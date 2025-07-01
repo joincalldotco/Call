@@ -14,6 +14,7 @@
     "@call/db": "workspace:*",
     "@hono/zod-validator": "^0.7.0",
     "@t3-oss/env-core": "^0.13.8",
+    "@types/ws": "^8.18.1",
     "drizzle-orm": "^0.44.2",
     "hono": "^4.8.0",
     "iovalkey": "^0.3.3",
@@ -22,6 +23,7 @@
     "postgres": "^3.4.7",
     "rate-limiter-flexible": "^7.1.1",
     "resend": "^4.6.0",
+    "ws": "^8.18.3",
     "zod": "^3.25.67"
   },
   "devDependencies": {

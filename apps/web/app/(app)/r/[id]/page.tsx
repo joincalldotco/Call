@@ -12,7 +12,6 @@ import {
 } from "@livekit/components-react";
 import { Room, Track } from "livekit-client";
 import { useParams } from "next/navigation";
-import SideBar from "@/components/app/sideBar"; // Assuming you have the sidebar component
 import "@livekit/components-styles";
 
 // Set up LiveKit URL and helper function for token generation
@@ -70,11 +69,6 @@ export default function RoomPage() {
   return (
     <RoomContext.Provider value={room}>
       <div className="w-full min-h-screen bg-[#101010] flex">
-        {/* Sidebar */}
-        <aside className="w-1/6 bg-[#101010] border-r border-gray-700">
-          <SideBar />
-        </aside>
-
         {/* Main video area */}
         <main className="flex-1 flex flex-col">
           {/* Video Layout */}
@@ -85,11 +79,30 @@ export default function RoomPage() {
           {/* Bottom control bar */}
           <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
             <div className="flex gap-8 bg-[#101010] p-4 rounded-md shadow-lg">
-              <TrackToggle source={Track.Source.Microphone} />
-              <TrackToggle source={Track.Source.Camera} />
-              <TrackToggle source={Track.Source.ScreenShare} />
+              <TrackToggle
+                style={{ color: "#fff" }}
+                source={Track.Source.Microphone}
+              />
+              <TrackToggle
+                style={{ color: "#fff" }}
+                source={Track.Source.Camera}
+              />
+              <TrackToggle
+                style={{ color: "#fff" }}
+                source={Track.Source.ScreenShare}
+              />
 
-              <DisconnectButton>Leave</DisconnectButton>
+              <DisconnectButton
+                style={{
+                  background: "var(--primary)",
+                  borderRadius: "var(--radius-md)",
+                  paddingTop: "3px",
+                  paddingBottom: "3px",
+                  color: "var(--primary-foreground)",
+                }}
+              >
+                Leave
+              </DisconnectButton>
             </div>
           </div>
         </main>

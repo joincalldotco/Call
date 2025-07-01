@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono, Lora } from "next/font/google";
 
 import "@call/ui/globals.css";
+import "@livekit/components-styles";
 import { Providers } from "@/components/providers";
 import { siteConfig } from "@/lib/site";
 import type { Metadata } from "next";
