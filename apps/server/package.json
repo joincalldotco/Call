@@ -7,7 +7,8 @@
     "yassr": "tsx src/ws-signaling.ts",
     "dev:hot": "nodemon --exec tsx src/index.ts",
     "build": "tsc --build",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "ws": "tsx src/mediasoup-server.ts"
   },
   "dependencies": {
     "@call/auth": "workspace:*",
@@ -19,6 +20,7 @@
     "drizzle-orm": "^0.44.2",
     "hono": "^4.8.0",
     "iovalkey": "^0.3.3",
+    "mediasoup": "^3.16.7",
     "nanoid": "^5.1.5",
     "pg": "^8.16.1",
     "postgres": "^3.4.7",
