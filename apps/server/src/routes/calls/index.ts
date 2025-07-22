@@ -130,7 +130,7 @@ callsRoutes.post("/create", async (c) => {
       await sendMail({
         to: email,
         subject: "You've been invited to a call",
-        text: `${name} has invited you to a call. Click the link below to join: ${process.env.FRONTEND_URL}/calls/${callId}`,
+        text: `${user.name} has invited you to a call. Click the link below to join: ${process.env.FRONTEND_URL}/calls/${callId}`,
       });
     }
     console.log("✅ [CALLS DEBUG] All invitations and notifications created");
