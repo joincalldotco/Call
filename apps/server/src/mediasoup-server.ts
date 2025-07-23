@@ -663,23 +663,23 @@ wss.on("connection", (ws: WebSocket) => {
 
           try {
             console.log(
-              `[consume] Creating consumer for producer: ${myProducer.producer.id}, kind: ${myProducer.producer.kind}`
+              `[consume] Creating consumer for producer: ${(myProducer as MyProducer).producer.id}, kind: ${(myProducer as MyProducer).producer.kind}`
             );
 
             const consumer = await peer.recvTransport.consume({
-              producerId: myProducer.producer.id,
+              producerId: (myProducer as MyProducer).producer.id,
               rtpCapabilities: data.rtpCapabilities,
               paused: false,
             });
 
             const myConsumer: MyConsumer = {
               id: consumer.id,
-              peerId: targetPeer.id,
-              producerId: myProducer.id,
+              peerId: (targetPeer as MyPeer).id,
+              producerId: (myProducer as MyProducer).id,
               consumer,
             };
 
-            peer.consumers.set(myProducer.id, myConsumer);
+            peer.consumers.set((myProducer as MyProducer).id, myConsumer);
 
             // Handle consumer events
             consumer.on("transportclose", () => {
@@ -697,19 +697,19 @@ wss.on("connection", (ws: WebSocket) => {
             });
 
             console.log(
-              `[mediasoup] Consumer created successfully: ${consumer.id} for producer: ${myProducer.id}, peer: ${peer.id} -> ${targetPeer.id}`
+              `[mediasoup] Consumer created successfully: ${consumer.id} for producer: ${(myProducer as MyProducer).id}, peer: ${peer.id} -> ${(targetPeer as MyPeer).id}`
             );
 
             const consumeResponse = {
               reqId: data.reqId,
               type: "consumeResponse",
               id: consumer.id,
-              producerId: myProducer.id,
+              producerId: (myProducer as MyProducer).id,
               kind: consumer.kind,
               rtpParameters: consumer.rtpParameters,
-              peerId: targetPeer.id,
-              displayName: targetPeer.displayName,
-              source: myProducer.source,
+              peerId: (targetPeer as MyPeer).id,
+              displayName: (targetPeer as MyPeer).displayName,
+              source: (myProducer as MyProducer).source,
             };
 
             console.log(
