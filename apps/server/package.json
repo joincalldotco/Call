@@ -3,11 +3,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "nodemon --exec tsx src/index.ts",
+    "dev": "concurrently -k -n api,ws -c green,blue \"nodemon --exec tsx src/index.ts\" \"tsx src/mediasoup-server.ts\"",
     "yassr": "tsx src/ws-signaling.ts",
     "dev:hot": "nodemon --exec tsx src/index.ts",
     "build": "tsc --build",
-    "start": "node dist/index.js",
+    "start": "concurrently -k -n api,ws -c green,blue \"node dist/index.js\" \"node dist/mediasoup-server.js\"",
     "ws": "tsx src/mediasoup-server.ts"
   },
   "dependencies": {
@@ -37,6 +37,7 @@
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "concurrently": "^8.2.2"
   }
 }
