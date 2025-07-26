@@ -251,7 +251,9 @@ callsRoutes.post("/record-participation", async (c) => {
       return c.json({ error: "Call ID is required" }, 400);
     }
 
-    console.log(`[RECORD-PARTICIPATION] Recording participation for user ${user.id} in call ${callId}`);
+    console.log(
+      `[RECORD-PARTICIPATION] Recording participation for user ${user.id} in call ${callId}`
+    );
 
     // Check if call exists
     const call = await db.query.calls.findFirst({
@@ -276,17 +278,17 @@ callsRoutes.post("/record-participation", async (c) => {
 
     if (existingParticipation.length === 0) {
       // Record participation only if not already recorded
-      const result = await db
-        .insert(callParticipants)
-        .values({
-          callId,
-          userId: user.id as string,
-          joinedAt: new Date(),
-        });
+      const result = await db.insert(callParticipants).values({
+        callId,
+        userId: user.id as string,
+        joinedAt: new Date(),
+      });
 
       console.log(`[RECORD-PARTICIPATION] Insert result:`, result);
     } else {
-      console.log(`[RECORD-PARTICIPATION] User already has participation record for this call`);
+      console.log(
+        `[RECORD-PARTICIPATION] User already has participation record for this call`
+      );
     }
 
     return c.json({ success: true });
@@ -305,7 +307,7 @@ callsRoutes.post("/record-leave", async (c) => {
     }
 
     let callId;
-    
+
     // Handle both JSON and beacon requests
     try {
       const body = await c.req.json();
@@ -325,7 +327,9 @@ callsRoutes.post("/record-leave", async (c) => {
       return c.json({ error: "Call ID is required" }, 400);
     }
 
-    console.log(`[RECORD-LEAVE] Recording leave for user ${user.id} in call ${callId}`);
+    console.log(
+      `[RECORD-LEAVE] Recording leave for user ${user.id} in call ${callId}`
+    );
 
     // Update the leftAt timestamp for the user's participation record
     const result = await db
@@ -401,10 +405,13 @@ callsRoutes.get("/:id/check-access", async (c) => {
       )
       .limit(1);
 
-    return c.json({ 
-      hasAccess: invitation.length > 0 || joinRequest.length > 0,
-      isCreator: false 
-    }, 200);
+    return c.json(
+      {
+        hasAccess: invitation.length > 0 || joinRequest.length > 0,
+        isCreator: false,
+      },
+      200
+    );
   } catch (error) {
     console.error("Error checking call access:", error);
     return c.json({ error: "Failed to check access" }, 500);
@@ -523,7 +530,7 @@ callsRoutes.post("/:id/approve-join", async (c) => {
     const user = c.get("user");
     const body = await c.req.json();
     const { requesterId } = body;
-    
+
     if (!user || !user.id) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -541,7 +548,10 @@ callsRoutes.post("/:id/approve-join", async (c) => {
 
     const call = callResult[0];
     if (call.creatorId !== user.id) {
-      return c.json({ error: "Only call creator can approve join requests" }, 403);
+      return c.json(
+        { error: "Only call creator can approve join requests" },
+        403
+      );
     }
 
     // Update join request status
@@ -570,7 +580,7 @@ callsRoutes.post("/:id/reject-join", async (c) => {
     const user = c.get("user");
     const body = await c.req.json();
     const { requesterId } = body;
-    
+
     if (!user || !user.id) {
       return c.json({ error: "Unauthorized" }, 401);
     }
@@ -588,7 +598,10 @@ callsRoutes.post("/:id/reject-join", async (c) => {
 
     const call = callResult[0];
     if (call.creatorId !== user.id) {
-      return c.json({ error: "Only call creator can reject join requests" }, 403);
+      return c.json(
+        { error: "Only call creator can reject join requests" },
+        403
+      );
     }
 
     // Update join request status
@@ -623,7 +636,9 @@ callsRoutes.delete("/participated/:callId", async (c) => {
       return c.json({ error: "Call ID is required" }, 400);
     }
 
-    console.log(`[DELETE-CALL-PARTICIPATION] Deleting participation for user ${user.id} in call ${callId}`);
+    console.log(
+      `[DELETE-CALL-PARTICIPATION] Deleting participation for user ${user.id} in call ${callId}`
+    );
 
     // Delete the specific participation record
     const result = await db
@@ -637,7 +652,10 @@ callsRoutes.delete("/participated/:callId", async (c) => {
 
     console.log(`[DELETE-CALL-PARTICIPATION] Delete result:`, result);
 
-    return c.json({ success: true, message: "Call participation deleted successfully" });
+    return c.json({
+      success: true,
+      message: "Call participation deleted successfully",
+    });
   } catch (error) {
     console.error("Error deleting call participation:", error);
     return c.json({ error: "Failed to delete call participation" }, 500);
@@ -661,7 +679,10 @@ callsRoutes.delete("/participated", async (c) => {
 
     console.log(`[DELETE-HISTORY] Delete result:`, result);
 
-    return c.json({ success: true, message: "Call history deleted successfully" });
+    return c.json({
+      success: true,
+      message: "Call history deleted successfully",
+    });
   } catch (error) {
     console.error("Error deleting call history:", error);
     return c.json({ error: "Failed to delete call history" }, 500);

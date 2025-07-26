@@ -56,7 +56,9 @@ function useWsRequest(socket: WebSocket | null) {
   const onMessage = useCallback((event: MessageEvent) => {
     try {
       const data = JSON.parse(event.data);
-      console.log("[mediasoup] Received message:", data);
+      if (event.data.type !== "activeSpeaker") {
+        console.log("[mediasoup] Received message:", data);
+      }
 
       if (data.reqId && pending.current.has(data.reqId)) {
         pending.current.get(data.reqId)?.(data);
@@ -447,14 +449,20 @@ export function useMediasoupClient() {
 
   // Load mediasoup device
   const loadDevice = useCallback(async (rtpCapabilities: RtpCapabilities) => {
-    let device = deviceRef.current;
-    if (!device) {
-      device = new Device();
-      await device.load({ routerRtpCapabilities: rtpCapabilities });
-      deviceRef.current = device;
-      console.log("[mediasoup] Device loaded");
+    try {
+      console.log("[mediasoup] Loading device...");
+      let device = deviceRef.current;
+      if (!device) {
+        device = new Device();
+        await device.load({ routerRtpCapabilities: rtpCapabilities });
+        deviceRef.current = device;
+        console.log("[mediasoup] Device loaded");
+      }
+      return device;
+    } catch (error) {
+      console.error("[mediasoup] Error loading device:", error);
+      throw error;
     }
-    return device;
   }, []);
 
   // Create send transport
