@@ -121,6 +121,7 @@ contactsRoutes.get("/requests", async (c) => {
         senderId: contactRequests.senderId,
         senderName: userTable.name,
         senderEmail: userTable.email,
+        profilePictureUrl: userTable.image,
         createdAt: contactRequests.createdAt,
       })
       .from(contactRequests)
@@ -136,6 +137,7 @@ contactsRoutes.get("/requests", async (c) => {
       ...r,
       senderName: r.senderName || "",
       senderEmail: r.senderEmail || "",
+      profilePictureUrl: r.profilePictureUrl || null,
     }));
 
     return c.json({ requests });
@@ -254,6 +256,7 @@ contactsRoutes.get("/", async (c) => {
         id: userTable.id,
         name: userTable.name,
         email: userTable.email,
+        image: userTable.image,
         createdAt: contacts.createdAt,
       })
       .from(contacts)

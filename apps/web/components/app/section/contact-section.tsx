@@ -1,19 +1,10 @@
 import ContactsList from "./contacts-list";
+import { UserPlus } from "lucide-react";
 
 export const ContactSection = ({ onAddContact }: { onAddContact?: () => void }) => {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        {onAddContact && (
-          <button
-            className="bg-primary text-white rounded px-4 py-2 hover:bg-primary/80 transition"
-            onClick={onAddContact}
-          >
-            Add Contact
-          </button>
-        )}
-      </div>
-      <ContactsList />
+    <div className="px-10 space-y-6">
+      <ContactsList onAddContact={onAddContact} />
     </div>
   );
 };

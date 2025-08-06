@@ -1,7 +1,6 @@
 "use client";
 
 import { useSession } from "@/components/providers/session";
-import { Skeletons } from "@/components/skeletons";
 import { useModal } from "@/hooks/use-modal";
 import { CALLS_QUERY } from "@/lib/QUERIES";
 import type { Call } from "@/lib/types";
@@ -11,21 +10,25 @@ import { Icons } from "@call/ui/components/icons";
 import { Input } from "@call/ui/components/input";
 import { iconvVariants, UserProfile } from "@call/ui/components/use-profile";
 import { cn } from "@call/ui/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { MoreVertical, X } from "lucide-react";
-import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { MoreVertical, X, Loader2, Phone, Trash, Users } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@call/ui/components/dropdown-menu";
 
 type FilterType = "all" | "my-calls" | "shared-with-me";
 
 export function CallHistory() {
-  const [calls, setCalls] = useState<Call[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const { user } = useSession();
 
   const {
-    data: response,
+    data: calls,
     isLoading,
     isError,
   } = useQuery({
@@ -33,164 +36,136 @@ export function CallHistory() {
     queryFn: () => CALLS_QUERY.getCalls(),
   });
 
-  const getFilteredCalls = () => {
-    let filteredCalls = calls;
+  // Memoized filtered calls
+  const filteredCalls = useMemo(() => {
+    if (!calls) return [];
 
+    let filtered = [...calls];
+
+    // Apply filter
     if (activeFilter === "my-calls") {
-      filteredCalls = calls.filter((call) => call.creatorId === user.id);
+      filtered = filtered.filter((call) => call.creatorId === user.id);
     } else if (activeFilter === "shared-with-me") {
-      filteredCalls = calls.filter((call) => call.creatorId !== user.id);
+      filtered = filtered.filter((call) => call.creatorId !== user.id);
     }
 
-    if (searchQuery) {
-      filteredCalls = filteredCalls.filter(
-        (call) =>
-          call.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          call.id.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((call) => {
+        const searchableFields = [
+          call.name,
+          ...call.participants.map(p => p.name),
+          ...call.participants.map(p => p.email)
+        ];
+        
+        return searchableFields.some(field => 
+          field?.toLowerCase().includes(query)
+        );
+      });
     }
 
-    return filteredCalls;
-  };
-
-  const filteredCalls = getFilteredCalls();
-
-  // Remove duplicate calls by id
-  const uniqueCalls = Array.from(
-    new Map(filteredCalls.map((call) => [call.id, call])).values()
-  );
+    return filtered;
+  }, [calls, searchQuery, activeFilter, user.id]);
 
   const clearSearch = () => {
     setSearchQuery("");
   };
 
-  // const deleteHistory = async () => {
-  //   if (
-  //     !confirm(
-  //       "¿Estás seguro de que quieres borrar todo tu historial de llamadas? Esta acción no se puede deshacer."
-  //     )
-  //   ) {
-  //     return;
-  //   }
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex h-64 items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading call history...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  //   // setIsDeleting(true);
-  //   try {
-  //     const res = await fetch(`${process.env.BACKEND_URL}/api/calls/participated`, {
-  //       method: "DELETE",
-  //       credentials: "include",
-  //     });
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex h-64 items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="rounded-full bg-red-50 p-3">
+              <Phone className="h-8 w-8 text-red-500" />
+            </div>
+            <p className="text-red-500 text-sm">Failed to load call history</p>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  //     if (!res.ok) {
-  //       throw new Error("Failed to delete call history");
-  //     }
-
-  //     // Clear the calls from state
-  //     setCalls([]);
-  //   } catch (err) {
-  //     setError(
-  //       err instanceof Error ? err.message : "Error deleting call history"
-  //     );
-  //   } finally {
-  //     // setIsDeleting(false);
-  //   }
-  // };
-
-  // const deleteCallParticipation = async (callId: string) => {
-  //   if (
-  //     !confirm(
-  //       "¿Estás seguro de que quieres eliminar esta llamada del historial?"
-  //     )
-  //   ) {
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await fetch(
-  //       `${process.env.BACKEND_URL}/api/calls/participated/${callId}`,
-  //       {
-  //         method: "DELETE",
-  //         credentials: "include",
-  //       }
-  //     );
-
-  //     if (!res.ok) {
-  //       throw new Error("Failed to delete call participation");
-  //     }
-
-  //     setCalls((prev) => prev.filter((call) => call.id !== callId));
-  //   } catch (err) {
-  //     setError(
-  //       err instanceof Error ? err.message : "Error deleting call participation"
-  //     );
-  //   }
-  // };
-
-  const getFilterCounts = () => {
-    const myCalls = calls.filter((call) => call.creatorId === user.id).length;
-    const sharedWithMe = calls.filter(
-      (call) => call.creatorId !== user.id
-    ).length;
-
-    return {
-      all: calls.length,
-      myCalls,
-      sharedWithMe,
-    };
-  };
-
-  const counts = getFilterCounts();
-
-  const isHavingCalls = response && response.length > 0;
+  const hasCallHistory = calls && calls.length > 0;
+  const hasSearchResults = filteredCalls.length > 0;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-6">
-        {isHavingCalls || isLoading ? (
+        {hasCallHistory ? (
           <div className="flex items-center gap-2">
             <div className="relative w-full max-w-md">
               <Input
                 type="text"
-                placeholder="Search"
+                placeholder="Search by call name or participant..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="placeholder:text-primary bg-inset-accent border-inset-accent-foreground h-12 border-2 px-10"
+                className="pl-10 pr-10 py-2.5 h-11 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
-              <Icons.search className="text-muted-foreground absolute left-3 top-1/2 size-5 -translate-y-1/2" />
+              <Icons.search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
               {searchQuery && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={clearSearch}
-                  className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 transform"
+                  className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 transform hover:bg-muted/50"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                className="bg-inset-accent-foreground hover:bg-inset-accent-foreground/80 size-12"
-                variant="ghost"
-              >
-                <Icons.filter className="size-" />
-                <span className="sr-only">Filter</span>
-              </Button>
-            </div>
+        
           </div>
         ) : null}
-        <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {isLoading ? (
-            Array.from({ length: 10 }).map((_, index) => (
-              <Skeletons.callHistory key={index} />
-            ))
-          ) : response && response.length > 0 ? (
-            response.map((call) => (
+        
+        {/* No results message */}
+        {hasCallHistory && !hasSearchResults && (
+          <div className="flex h-64 flex-col items-center justify-center text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="rounded-full bg-muted/50 p-4">
+                <Phone className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium">No calls found</h3>
+              <p className="text-muted-foreground max-w-sm">
+                No calls match your search criteria. Try adjusting your search terms.
+              </p>
+              {searchQuery && (
+                <Button variant="outline" size="sm" onClick={clearSearch}>
+                  Clear Search
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Call grid */}
+        {hasSearchResults && (
+          <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredCalls.map((call) => (
               <CallHistoryCard key={call.id} call={call} />
-            ))
-          ) : (
-            <NoCallsFound />
-          )}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!hasCallHistory && <NoCallsFound />}
       </div>
     </div>
   );
@@ -203,6 +178,22 @@ interface CallHistoryCardProps {
 const CallHistoryCard = ({ call }: CallHistoryCardProps) => {
   const participantsToShow = 3;
   const remainingParticipants = call.participants.length - participantsToShow;
+  const queryClient = useQueryClient();
+
+  const handleHideCall = async () => {
+    try {
+      await CALLS_QUERY.hideCall(call.id);
+      // Invalidate and refetch calls
+      queryClient.invalidateQueries({ queryKey: ["calls"] });
+    } catch (error) {
+      console.error("Failed to hide call:", error);
+    }
+  };
+
+  const handleViewUsers = () => {
+    // This could be implemented later to show a modal with all participants
+    console.log("View users clicked", call.participants);
+  };
 
   return (
     <div className="bg-inset-accent flex flex-col gap-3 rounded-xl border p-4">
@@ -210,9 +201,23 @@ const CallHistoryCard = ({ call }: CallHistoryCardProps) => {
         <h1 className="text-lg font-medium first-letter:uppercase">
           {call.name}
         </h1>
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleViewUsers}>
+              <Users className="mr-2 h-4 w-4" />
+              View Users
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleHideCall} variant="destructive">
+              <Trash className="mr-2 h-4 w-4" />
+              Hide Call
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

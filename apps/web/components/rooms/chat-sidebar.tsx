@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { Sheet, SheetContent } from "@call/ui/components/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@call/ui/components/sheet";
 import { Input } from "@call/ui/components/input";
 import { Button } from "@call/ui/components/button";
 import { ScrollArea } from "@call/ui/components/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@call/ui/components/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@call/ui/components/avatar";
 import { formatDistanceToNow } from "date-fns";
 
 interface Message {
@@ -61,7 +65,8 @@ export function ChatSidebar({
   }, [socket]);
 
   const sendMessage = () => {
-    if (!socket || !inputValue.trim() || socket.readyState !== WebSocket.OPEN) return;
+    if (!socket || !inputValue.trim() || socket.readyState !== WebSocket.OPEN)
+      return;
 
     const message: Message = {
       id: crypto.randomUUID(),
@@ -72,10 +77,12 @@ export function ChatSidebar({
       timestamp: Date.now(),
     };
 
-    socket.send(JSON.stringify({
-      type: "chat",
-      message,
-    }));
+    socket.send(
+      JSON.stringify({
+        type: "chat",
+        message,
+      })
+    );
 
     setInputValue("");
   };
@@ -89,11 +96,11 @@ export function ChatSidebar({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[400px] p-0 flex flex-col">
+      <SheetContent side="right" className="flex w-[400px] flex-col p-0">
         <div className="border-b p-4">
-          <h2 className="text-lg font-semibold">Chat</h2>
+          <SheetTitle className="text-lg font-semibold">Chat</SheetTitle>
         </div>
-        
+
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-[calc(100vh-8rem)]">
             <div className="flex flex-col gap-4 p-4">
@@ -117,10 +124,14 @@ export function ChatSidebar({
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">
-                        {message.senderId === userId ? "You" : message.senderName}
+                        {message.senderId === userId
+                          ? "You"
+                          : message.senderName}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(message.timestamp, { addSuffix: true })}
+                      <span className="text-muted-foreground text-xs">
+                        {formatDistanceToNow(message.timestamp, {
+                          addSuffix: true,
+                        })}
                       </span>
                     </div>
                     <div
@@ -140,7 +151,7 @@ export function ChatSidebar({
           </ScrollArea>
         </div>
 
-        <div className="border-t p-4 mt-auto">
+        <div className="mt-auto border-t p-4">
           <div className="flex gap-2">
             <Input
               placeholder="Type a message..."
@@ -156,4 +167,4 @@ export function ChatSidebar({
       </SheetContent>
     </Sheet>
   );
-} 
+}

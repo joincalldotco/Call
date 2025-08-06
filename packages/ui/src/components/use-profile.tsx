@@ -28,14 +28,13 @@ const iconvVariants = cva(
 interface ProfileProps extends VariantProps<typeof iconvVariants> {
   className?: string;
   url?: string | null;
-  name: string;
+  name?: string | null;
 }
 
-const UserProfile = ({ className, url, name, size }: ProfileProps) => {
+const UserProfile = ({ className, url, name = "User", size }: ProfileProps) => {
   const twoLettersName = name
-    .split("-")
-    .map((l) => l[0])
-    .join("");
+    ? name.split(/[-\s]/).filter(Boolean).map((l) => l[0]).join("").slice(0, 2)
+    : "U";
 
   return (
     <Avatar className={cn(iconvVariants({ size, className }))}>

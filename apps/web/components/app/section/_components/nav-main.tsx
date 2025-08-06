@@ -37,8 +37,9 @@ export function NavMain({
             tooltip="Start Call"
             isActive={true}
             onClick={() => onOpen("start-call")}
+            className="flex items-center justify-center gap-2"
           >
-            <Icons.plus />
+            <Icons.plus className="size-4" />
             <span>Start Call</span>
           </SidebarMenuButton>
         </SidebarMenuItem>

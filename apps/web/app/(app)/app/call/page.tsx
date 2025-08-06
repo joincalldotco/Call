@@ -46,7 +46,8 @@ export default function CallPage() {
               className={cn(
                 buttonVariants({ variant: "ghost" }),
                 "relative z-0 transition-all hover:bg-transparent",
-                sectionKey === s.key && "font-medium text-white"
+                sectionKey === s.key &&
+                  "font-medium text-white hover:text-white"
               )}
             >
               {s.label}

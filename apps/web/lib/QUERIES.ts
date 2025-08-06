@@ -35,6 +35,13 @@ export const CALLS_QUERY = {
     }
     throw new Error("Failed to fetch calls");
   },
+  hideCall: async (callId: string) => {
+    const res = await apiClient.post(`/calls/${callId}/hide`);
+    if (res.status === 200) {
+      return res.data;
+    }
+    throw new Error("Failed to hide call");
+  },
 };
 
 export const TEAMS_QUERY = {

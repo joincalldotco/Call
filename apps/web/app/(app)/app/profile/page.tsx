@@ -3,17 +3,14 @@
 import { useSession } from "@/components/providers/session";
 import { authClient } from "@call/auth/auth-client";
 import { Button } from "@call/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@call/ui/components/card";
 import { Input } from "@call/ui/components/input";
 import { Label } from "@call/ui/components/label";
 import { UserProfile } from "@call/ui/components/use-profile";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { FiCamera, FiMail, FiCalendar, FiEdit2, FiCheck, FiX } from "react-icons/fi";
+import { Badge } from "@call/ui/components/badge";
+import { Separator } from "@call/ui/components/separator";
 
 export default function ProfilePage() {
   const { user } = useSession();
@@ -66,13 +63,11 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size must be less than 5MB");
       return;
@@ -96,12 +91,8 @@ export default function ProfilePage() {
         throw new Error("Failed to update profile image");
       }
 
-      // Refresh the session to get the updated user data
       await authClient.getSession();
-
       toast.success("Profile image updated successfully");
-
-      // Force a page refresh to update all components with new session data
       window.location.reload();
     } catch (error) {
       toast.error("Failed to update profile image");
@@ -111,95 +102,107 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto mt-8 max-w-2xl">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="group relative" onClick={handleImageClick}>
-              <UserProfile name={user.name} url={user.image} />
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageChange}
-                disabled={imageLoading}
-              />
+    <div className="min-h-[calc(100vh-4rem)]  from-primary/5 to-background p-8">
+      <div className="mx-auto max-w-4xl space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col items-center space-y-4 text-center">
+          <div className="group relative cursor-pointer" onClick={handleImageClick}>
+            <div className="relative h-32 w-32">
+              <UserProfile name={user.name} url={user.image} className="h-full w-full" size="lg" />
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 transition-colors group-hover:bg-black/40">
+                <FiCamera className="hidden h-8 w-8 text-white group-hover:block" />
+              </div>
               {imageLoading && (
                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 </div>
               )}
             </div>
-            <div>
-              <h2 className="text-xl font-semibold">{user.name}</h2>
-              <p className="text-muted-foreground text-sm">{user.email}</p>
-            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageChange}
+              disabled={imageLoading}
+            />
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              {isEditing ? (
-                <div className="mt-1 flex gap-2">
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={loading}
-                  />
-                  <Button onClick={handleUpdateProfile} disabled={loading}>
-                    {loading ? "Saving..." : "Save"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setName(user.name);
-                    }}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <div className="mt-1 flex items-center justify-between">
-                  <p className="text-sm">{user.name}</p>
-                  <Button variant="outline" onClick={() => setIsEditing(true)}>
-                    Edit
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <div className="mt-1 flex items-center justify-between">
-                <p className="text-sm">{user.email}</p>
-                {user.emailVerified ? (
-                  <span className="text-xs font-medium text-green-600">
-                    Verified
-                  </span>
-                ) : (
-                  <Button variant="outline" size="sm">
-                    Verify Email
-                  </Button>
-                )}
+          <div className="space-y-1">
+            {isEditing ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-10 text-xl font-semibold"
+                  disabled={loading}
+                />
+                <Button size="icon" onClick={handleUpdateProfile} disabled={loading}>
+                  <FiCheck className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setName(user.name);
+                  }}
+                  disabled={loading}
+                >
+                  <FiX className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-
-            <div>
-              <Label>Account Created</Label>
-              <p className="mt-1 text-sm">
-                {new Date(user.createdAt).toLocaleDateString()}
-              </p>
-            </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-2xl font-semibold">{user.name}</h1>
+                <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
+                  <FiEdit2 className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            <p className="text-muted-foreground">{user.email}</p>
           </div>
-        </CardContent>
-      </Card>
+
+        
+        </div>
+
+        <Separator />
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="flex items-center gap-2">
+              <FiMail className="h-5 w-5 text-muted-foreground" />
+              <h3 className="font-medium">Email Status</h3>
+            </div>
+            <p className="mt-2 text-2xl font-semibold">
+              {user.emailVerified ? "Verified" : "Pending"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="flex items-center gap-2">
+              <FiCalendar className="h-5 w-5 text-muted-foreground" />
+              <h3 className="font-medium">Member Since</h3>
+            </div>
+            <p className="mt-2 text-2xl font-semibold">
+              {new Date(user.createdAt).toLocaleDateString(undefined, {
+                month: "short",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6 text-card-foreground shadow-sm">
+            <div className="flex items-center gap-2">
+              <FiMail className="h-5 w-5 text-muted-foreground" />
+              <h3 className="font-medium">Total Calls</h3>
+            </div>
+            <p className="mt-2 text-2xl font-semibold">0</p>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

@@ -121,6 +121,7 @@ teamsRoutes.get("/", async (c) => {
       userId: teamMembers.userId,
       name: userTable.name,
       email: userTable.email,
+      image: userTable.image,
     })
     .from(teamMembers)
     .leftJoin(userTable, eq(teamMembers.userId, userTable.id))
@@ -128,7 +129,7 @@ teamsRoutes.get("/", async (c) => {
 
   const teamMembersMap: Record<
     string,
-    Array<{ user_id: string; name: string; email: string }>
+    Array<{ user_id: string; name: string; email: string; image: string | null }>
   > = {};
   for (const m of allTeamMembers) {
     if (!m.teamId || !m.userId) continue;
@@ -137,6 +138,7 @@ teamsRoutes.get("/", async (c) => {
       user_id: m.userId,
       name: m.name ?? "",
       email: m.email ?? "",
+      image: m.image ?? null,
     });
   }
 

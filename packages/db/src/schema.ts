@@ -6,6 +6,7 @@ import {
   integer,
   pgEnum,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // Auth schema
@@ -309,6 +310,29 @@ export const callJoinRequests = pgTable(
   ]
 );
 
+// Hidden Calls Table
+export const hiddenCalls = pgTable(
+  "hidden_calls",
+  {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    callId: text("call_id")
+      .notNull()
+      .references(() => calls.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    hiddenAt: timestamp("hidden_at")
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  (table) => ({
+    callIdIdx: index("hidden_calls_call_id_idx").on(table.callId),
+    userIdIdx: index("hidden_calls_user_id_idx").on(table.userId),
+    // Ensure a call can only be hidden once per user
+    uniqueIdx: uniqueIndex("hidden_calls_call_user_unique_idx").on(table.callId, table.userId),
+  })
+);
+
 const schema = {
   user,
   session,
@@ -322,9 +346,11 @@ const schema = {
   teams,
   teamMembers,
   calls,
+  callParticipants,
   callInvitations,
   notifications,
   callJoinRequests,
+  hiddenCalls,
 };
 
 export default schema;

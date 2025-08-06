@@ -3,9 +3,11 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { CONTACTS_QUERY } from "@/lib/QUERIES";
 
 interface Contact {
-  contactId: string;
+  id: string;
   name: string;
   email: string;
+  image?: string;
+  createdAt: string;
 }
 
 const ContactsContext = createContext<{

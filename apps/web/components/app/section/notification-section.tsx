@@ -1,9 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardContent } from "@call/ui/components/card";
 import { Button } from "@call/ui/components/button";
+import { Icons } from "@call/ui/components/icons";
+import { Input } from "@call/ui/components/input";
+import { iconvVariants, UserProfile } from "@call/ui/components/use-profile";
+import { cn } from "@call/ui/lib/utils";
+import { 
+  Bell, 
+  Phone, 
+  Users, 
+  UserPlus, 
+  CheckCircle, 
+  XCircle, 
+  Clock,
+  Video,
+  Calendar,
+  X,
+  Loader2,
+  MoreVertical
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@call/ui/components/dropdown-menu";
 
 interface Notification {
   id: string;
@@ -14,29 +37,35 @@ interface Notification {
   invitationStatus?: string | null;
   inviterName?: string | null;
   inviterEmail?: string | null;
+  inviterProfilePictureUrl?: string | null;
   createdAt: string;
   type?: "call" | "contact";
   contactRequestId?: string;
   contactRequestStatus?: "pending" | "accepted" | "rejected";
   senderName?: string;
   senderEmail?: string;
+  senderProfilePictureUrl?: string | null;
 }
 
-// Tab labels for notification sections
-const TABS = [
-  { key: "all", label: "All notifications" },
-  { key: "calls", label: "Calls" },
-  { key: "schedules", label: "Schedules" },
-  { key: "teams", label: "Teams" },
-  { key: "contacts", label: "Contacts" },
-];
+// Sub-section options for notifications
+const SECTIONS = {
+  all: "All notifications",
+  calls: "Calls",
+  schedules: "Schedules", 
+  teams: "Teams",
+  contacts: "Contacts",
+};
 
-const NotificationSection = () => {
+interface NotificationSectionProps {
+  section: string;
+}
+
+const NotificationSection = ({ section }: NotificationSectionProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("all"); // Track selected tab
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -75,6 +104,7 @@ const NotificationSection = () => {
             contactRequestStatus: "pending",
             senderName: req.senderName,
             senderEmail: req.senderEmail,
+            senderProfilePictureUrl: req.profilePictureUrl || null,
             createdAt: new Date().toISOString(), // Since we don't have the actual creation date
           })
         );
@@ -85,6 +115,7 @@ const NotificationSection = () => {
           ...(notificationsData.notifications || []).map((n: any) => ({
             ...n,
             type: "call",
+            inviterProfilePictureUrl: n.inviterProfilePictureUrl || null,
           })),
         ]);
       } catch (err: any) {
@@ -95,6 +126,54 @@ const NotificationSection = () => {
     };
     fetchNotifications();
   }, []);
+
+  // Memoized filtered notifications
+  const filteredNotifications = useMemo(() => {
+    if (!notifications) return [];
+
+    let filtered = [...notifications];
+
+    // Apply section filter
+    if (section === "calls") {
+      filtered = filtered.filter(
+        (n) => n.type === "call" && n.invitationId && !(typeof n.message === "string" && n.message.includes("started a meeting in team"))
+      );
+    } else if (section === "teams") {
+      filtered = filtered.filter(
+        (n) => n.type === "call" && typeof n.message === "string" && n.message.includes("started a meeting in team")
+      );
+    } else if (section === "contacts") {
+      filtered = filtered.filter((n) => n.type === "contact");
+    } else if (section === "schedules") {
+      // Placeholder for future schedule notifications
+      filtered = [];
+    }
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((notification) => {
+        const searchableFields = [
+          notification.message,
+          notification.inviterName,
+          notification.inviterEmail,
+          notification.senderName,
+          notification.senderEmail,
+          notification.callName
+        ];
+        
+        return searchableFields.some(field => 
+          field?.toLowerCase().includes(query)
+        );
+      });
+    }
+
+    return filtered;
+  }, [notifications, searchQuery, section]);
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
 
   const handleAccept = async (
     invitationId?: string,
@@ -178,317 +257,317 @@ const NotificationSection = () => {
     }
   };
 
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getNotificationType = (notification: Notification) => {
+    if (notification.type === "contact") return "contact";
+    if (notification.message?.includes("team")) return "team";
+    return "call";
+  };
+
   if (loading) {
     return (
-      <div className="flex h-32 items-center justify-center">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="space-y-6">
+        <div className="flex h-64 items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading notifications...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-32 items-center justify-center">
-        <p className="text-red-500">{error}</p>
+      <div className="space-y-6">
+        <div className="flex h-64 items-center justify-center">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="rounded-full bg-red-50 p-3">
+              <Bell className="h-8 w-8 text-red-500" />
+            </div>
+            <p className="text-red-500 text-sm">Failed to load notifications</p>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+              Try Again
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Tab bar UI
-  const renderTabs = () => (
-    <div className="flex gap-2 mb-6 border-b">
-      {TABS.map((tab) => (
-        <button
-          key={tab.key}
-          className={`px-4 py-2 font-medium border-b-2 transition-colors duration-150 focus:outline-none ${
-            activeTab === tab.key
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-primary"
-          }`}
-          onClick={() => setActiveTab(tab.key)}
-          type="button"
-        >
-          {tab.label}
-        </button>
-      ))}
+  const hasNotifications = notifications && notifications.length > 0;
+  const hasSearchResults = filteredNotifications.length > 0;
+
+  return (
+    <div className="px-10 space-y-6">
+      <div className="flex flex-col gap-6">
+        {hasNotifications ? (
+          <div className="flex items-center gap-2">
+            <div className="relative w-full max-w-md">
+              <Input
+                type="text"
+                placeholder="Search notifications..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10 py-2.5 h-11 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <Icons.search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearSearch}
+                  className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 transform hover:bg-muted/50"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+         
+          </div>
+        ) : null}
+        
+        {/* No results message */}
+        {hasNotifications && !hasSearchResults && (
+          <div className="flex h-64 flex-col items-center justify-center text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="rounded-full bg-muted/50 p-4">
+                <Bell className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium">No notifications found</h3>
+              <p className="text-muted-foreground max-w-sm">
+                No notifications match your search criteria. Try adjusting your search terms.
+              </p>
+              {searchQuery && (
+                <Button variant="outline" size="sm" onClick={clearSearch}>
+                  Clear Search
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Notifications grid */}
+        {hasSearchResults && (
+          <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredNotifications.map((notification) => (
+              <NotificationCard 
+                key={notification.id} 
+                notification={notification}
+                onAccept={handleAccept}
+                onReject={handleReject}
+                onContactAction={handleContactAction}
+                isActionLoading={actionLoading === notification.id || actionLoading === notification.invitationId || actionLoading === notification.contactRequestId}
+                onJoinCall={() => notification.callId && router.push(`/app/call/${notification.callId}`)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!hasNotifications && <NoNotificationsFound />}
+      </div>
     </div>
   );
+};
 
-  // Only show notifications in 'All notifications' tab for now
-  const renderContent = () => {
-    if (activeTab === "calls") {
-      // Show only call invitation notifications that are NOT team meetings
-      const callInvites = notifications.filter(
-        (n) => n.type === "call" && n.invitationId && !(typeof n.message === "string" && n.message.includes("started a meeting in team"))
-      );
-      if (callInvites.length === 0) {
-        return (
-          <div className="flex h-32 items-center justify-center text-muted-foreground">
-            No call invitations.
-          </div>
-        );
-      }
-      return (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {callInvites.map((n) => {
-            const inviter = n.inviterName || n.inviterEmail || "Someone";
-            const call = n.callName || "(no name)";
-            const message =
-              n.message ||
-              `${inviter} (${n.inviterEmail || "-"}) invites you to a call: ${call}`;
-            return (
-              <Card key={n.id} className="transition-shadow hover:shadow-md">
-                <CardHeader>
-                  <div className="font-semibold">{message}</div>
-                  <div className="text-muted-foreground mt-1 text-xs">
-                    {new Date(n.createdAt).toLocaleString()}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {n.invitationStatus === "pending" && n.invitationId ? (
-                    <div className="mt-2 flex gap-2">
-                      <Button
-                        onClick={() =>
-                          handleAccept(n.invitationId ?? undefined, n.callId)
-                        }
-                        disabled={actionLoading === n.invitationId}
-                      >
-                        Join
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleReject(n.invitationId ?? undefined)}
-                        disabled={actionLoading === n.invitationId}
-                      >
-                        Reject
-                      </Button>
-                    </div>
-                  ) : n.invitationStatus === "accepted" ? (
-                    <span className="font-medium text-green-600">
-                      You've already joined
-                    </span>
-                  ) : n.invitationStatus === "rejected" ? (
-                    <span className="font-medium text-red-600">
-                      You've declined the invitation
-                    </span>
-                  ) : n.callId ? (
-                    <div className="mt-2 flex gap-2">
-                      <Button
-                        onClick={() => router.push(`/app/call/${n.callId}`)}
-                      >
-                        Join Meeting
-                      </Button>
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      );
-    }
-    if (activeTab === "teams") {
-      // Show only team call notifications
-      const teamCallNotifications = notifications.filter(
-        (n) => n.type === "call" && typeof n.message === "string" && n.message.includes("started a meeting in team")
-      );
-      if (teamCallNotifications.length === 0) {
-        return (
-          <div className="flex h-32 items-center justify-center text-muted-foreground">
-            No team call notifications.
-          </div>
-        );
-      }
-      return (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {teamCallNotifications.map((n) => (
-            <Card key={n.id} className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <div className="font-semibold">{n.message}</div>
-                <div className="text-muted-foreground mt-1 text-xs">
-                  {new Date(n.createdAt).toLocaleString()}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {n.callId && (
-                  <div className="mt-2 flex gap-2">
-                    <Button onClick={() => router.push(`/app/call/${n.callId}`)}>
-                      Join Meeting
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      );
-    }
-    if (activeTab === "contacts") {
-      // Show only contact invitation notifications
-      const contactInvites = notifications.filter(
-        (n) => n.type === "contact"
-      );
-      if (contactInvites.length === 0) {
-        return (
-          <div className="flex h-32 items-center justify-center text-muted-foreground">
-            No contact invitations.
-          </div>
-        );
-      }
-      return (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {contactInvites.map((n) => (
-            <Card key={n.id} className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <div className="font-semibold">{n.message}</div>
-                <div className="text-muted-foreground mt-1 text-xs">
-                  {new Date(n.createdAt).toLocaleString()}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="mt-2 flex gap-2">
-                  <Button
-                    onClick={() =>
-                      handleContactAction(n.contactRequestId!, "accept")
-                    }
-                    disabled={actionLoading === n.contactRequestId}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      handleContactAction(n.contactRequestId!, "reject")
-                    }
-                    disabled={actionLoading === n.contactRequestId}
-                  >
-                    Reject
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      );
-    }
-    if (activeTab !== "all") {
-      // Placeholder for future content
-      return (
-        <div className="flex h-32 items-center justify-center text-muted-foreground">
-          No notifications in this section yet.
-        </div>
-      );
-    }
-    if (notifications.length === 0) {
-      return (
-        <div className="flex h-64 flex-col items-center justify-center text-center">
-          <h3 className="mb-2 text-lg font-medium">No notifications</h3>
-          <p className="text-muted-foreground">You have no notifications yet.</p>
-        </div>
-      );
-    }
-    return (
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {notifications.map((n) => {
-          if (n.type === "contact") {
-            return (
-              <Card key={n.id} className="transition-shadow hover:shadow-md">
-                <CardHeader>
-                  <div className="font-semibold">{n.message}</div>
-                  <div className="text-muted-foreground mt-1 text-xs">
-                    {new Date(n.createdAt).toLocaleString()}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="mt-2 flex gap-2">
-                    <Button
-                      onClick={() =>
-                        handleContactAction(n.contactRequestId!, "accept")
-                      }
-                      disabled={actionLoading === n.contactRequestId}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() =>
-                        handleContactAction(n.contactRequestId!, "reject")
-                      }
-                      disabled={actionLoading === n.contactRequestId}
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          }
+interface NotificationCardProps {
+  notification: Notification;
+  onAccept: (invitationId?: string, callId?: string | null) => void;
+  onReject: (invitationId?: string) => void;
+  onContactAction: (requestId: string, action: "accept" | "reject") => void;
+  isActionLoading: boolean;
+  onJoinCall: () => void;
+}
 
-          // Call notifications
-          const inviter = n.inviterName || n.inviterEmail || "Someone";
-          const call = n.callName || "(no name)";
-          const message =
-            n.message ||
-            `${inviter} (${n.inviterEmail || "-"}) invites you to a call: ${call}`;
-          return (
-            <Card key={n.id} className="transition-shadow hover:shadow-md">
-              <CardHeader>
-                <div className="font-semibold">{message}</div>
-                <div className="text-muted-foreground mt-1 text-xs">
-                  {new Date(n.createdAt).toLocaleString()}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {n.invitationStatus === "pending" && n.invitationId ? (
-                  <div className="mt-2 flex gap-2">
-                    <Button
-                      onClick={() =>
-                        handleAccept(n.invitationId ?? undefined, n.callId)
-                      }
-                      disabled={actionLoading === n.invitationId}
-                    >
-                      Join
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleReject(n.invitationId ?? undefined)}
-                      disabled={actionLoading === n.invitationId}
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                ) : n.invitationStatus === "accepted" ? (
-                  <span className="font-medium text-green-600">
-                    You've already joined
-                  </span>
-                ) : n.invitationStatus === "rejected" ? (
-                  <span className="font-medium text-red-600">
-                    You've declined the invitation
-                  </span>
-                ) : n.callId ? (
-                  <div className="mt-2 flex gap-2">
-                    <Button
-                      onClick={() => router.push(`/app/call/${n.callId}`)}
-                    >
-                      Join Meeting
-                    </Button>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    );
+const NotificationCard = ({ 
+  notification, 
+  onAccept, 
+  onReject, 
+  onContactAction, 
+  isActionLoading,
+  onJoinCall 
+}: NotificationCardProps) => {
+  const getNotificationType = (notification: Notification) => {
+    if (notification.type === "contact") return "contact";
+    if (notification.message?.includes("team")) return "team";
+    return "call";
+  };
+
+  const notificationType = getNotificationType(notification);
+  const isContact = notification.type === "contact";
+  const senderName = isContact ? notification.senderName : notification.inviterName;
+  const senderEmail = isContact ? notification.senderEmail : notification.inviterEmail;
+  const profilePictureUrl = isContact ? notification.senderProfilePictureUrl : notification.inviterProfilePictureUrl;
+  const displayName = senderName || senderEmail || "Unknown User";
+
+  const typeIcons: Record<string, React.ReactElement> = {
+    call: <Video className="h-4 w-4" />,
+    team: <Users className="h-4 w-4" />,
+    contact: <UserPlus className="h-4 w-4" />
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return date.toLocaleDateString();
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="mb-4 text-2xl font-bold">Notifications</h1>
-        {renderTabs()}
+    <div className="bg-inset-accent flex flex-col gap-3 rounded-xl border p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {typeIcons[notificationType]}
+          <h1 className="text-lg font-medium first-letter:uppercase">
+            {displayName}
+          </h1>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+                     <DropdownMenuContent align="end">
+             <DropdownMenuItem onClick={() => window.location.reload()}>
+               <Loader2 className="mr-2 h-4 w-4" />
+               Refresh
+             </DropdownMenuItem>
+           </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      {renderContent()}
+      
+      <div className="flex items-center gap-2">
+        <Clock className="size-4" />
+        <span className="text-muted-foreground text-sm">
+          {formatTimeAgo(notification.createdAt)}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Icons.users className="size-4" />
+        <span className="text-muted-foreground text-sm">
+          {notification.message}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <UserProfile
+          name={displayName}
+          url={profilePictureUrl}
+          size="sm"
+          className="border-inset-accent border"
+        />
+      </div>
+
+      {/* Action buttons */}
+      {isContact ? (
+        <div className="flex gap-2">
+          <Button
+            onClick={() => onContactAction(notification.contactRequestId!, "accept")}
+            disabled={isActionLoading}
+            className="flex-1"
+            size="sm"
+          >
+            {isActionLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Accept"
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onContactAction(notification.contactRequestId!, "reject")}
+            disabled={isActionLoading}
+            className="flex-1"
+            size="sm"
+          >
+            {isActionLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Decline"
+            )}
+          </Button>
+        </div>
+      ) : notification.invitationStatus === "pending" && notification.invitationId ? (
+        <div className="flex gap-2">
+          <Button
+            onClick={() => onAccept(notification.invitationId ?? undefined, notification.callId)}
+            disabled={isActionLoading}
+            className="flex-1"
+            size="sm"
+          >
+            {isActionLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Join Call"
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onReject(notification.invitationId ?? undefined)}
+            disabled={isActionLoading}
+            className="flex-1"
+            size="sm"
+          >
+            {isActionLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Decline"
+            )}
+          </Button>
+        </div>
+      ) : notification.invitationStatus === "accepted" ? (
+        <div className="flex items-center gap-2 text-green-600">
+          <CheckCircle className="h-4 w-4" />
+          <span className="text-sm">Accepted</span>
+        </div>
+      ) : notification.invitationStatus === "rejected" ? (
+        <div className="flex items-center gap-2 text-red-600">
+          <XCircle className="h-4 w-4" />
+          <span className="text-sm">Declined</span>
+        </div>
+      ) : notification.callId ? (
+        <Button
+          onClick={onJoinCall}
+          className="w-full"
+          size="sm"
+        >
+          Join Meeting
+        </Button>
+      ) : null}
+    </div>
+  );
+};
+
+const NoNotificationsFound = () => {
+  return (
+    <div className="bg-inset-accent border-inset-accent-foreground col-span-full flex h-96 flex-col items-center justify-center gap-4 rounded-xl border p-4 text-center">
+      <div className="flex flex-col items-center">
+        <h1 className="text-lg font-medium">
+          You don&apos;t have any notifications yet.
+        </h1>
+        <p className="text-muted-foreground">
+          Notifications will appear here when you receive calls or contact requests.
+        </p>
+      </div>
     </div>
   );
 };

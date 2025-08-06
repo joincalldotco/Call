@@ -1,9 +1,10 @@
 import { useContacts } from "@/components/providers/contacts";
 import { useModal } from "@/hooks/use-modal";
-import { CONTACTS_QUERY, TEAMS_QUERY } from "@/lib/QUERIES";
+import { CONTACTS_QUERY } from "@/lib/QUERIES";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@call/ui/components/dialog";
@@ -63,8 +64,11 @@ export const CreateContact = () => {
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
       <DialogContent>
-        <DialogHeader>
+        <DialogHeader className="flex flex-col items-center">
           <DialogTitle>Create Contact</DialogTitle>
+          <DialogDescription>
+            Add a new contact to your contacts list.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
