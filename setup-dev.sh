@@ -170,16 +170,38 @@ print_step "Waiting for PostgreSQL to be ready..."
 for i in {1..30}; do
   if docker compose exec -T postgres pg_isready -U postgres >/dev/null 2>&1; then
     print_success "PostgreSQL is ready"
+    
+    print_step "Waiting for Redis to be ready..."
+    for j in {1..30}; do
+      if docker compose exec -T redis redis-cli ping | grep -q PONG; then
+        print_success "Redis is ready"
+        break
+      fi
+      if [ $j -eq 30 ]; then
+        print_error "Redis failed to start within 30 seconds"
+        exit 1
+      fi
+      sleep 1
+    done
+
     print_step "Migrating db..."
     pnpm run db:migrate
+    if [ $? -eq 0 ]; then
+      print_success "Database migrations applied successfully"
+    else
+      print_error "Failed to apply database migrations."
+      exit 1
+    fi
     break
   fi
+
   if [ $i -eq 30 ]; then
     print_error "PostgreSQL failed to start within 30 seconds"
     exit 1
   fi
   sleep 1
 done
+
 
 print_success "Setup completed successfully! 🎉"
 echo ""
