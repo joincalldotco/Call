@@ -1,4 +1,5 @@
 "use client";
+
 import { useSession } from "@/components/providers/session";
 import { useModal } from "@/hooks/use-modal";
 import { siteConfig } from "@/lib/site";
@@ -119,10 +120,12 @@ export function AppSidebar({
                       size="sm"
                       className="flex justify-start gap-2"
                     >
-                      {item.icon && <item.icon />}
+                      {item.icon && (
+                        <item.icon className="fill-primary-blue!" />
+                      )}
                       <span
                         className={cn(
-                          isThoughts && "font-medium text-[#FF6347]"
+                          isThoughts && "text-primary-blue font-medium"
                         )}
                       >
                         {item.title}
@@ -133,7 +136,7 @@ export function AppSidebar({
                       {item.icon && <item.icon />}
                       <span
                         className={cn(
-                          isThoughts && "font-medium text-[#FF6347]"
+                          isThoughts && "text-primary-blue font-medium"
                         )}
                       >
                         {item.title}

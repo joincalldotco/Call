@@ -44,6 +44,9 @@
   --sidebar-inset: oklch(0.985 0 0);
   --inset-accent: oklch(0.985 0 0);
   --inset-accent-foreground: oklch(0.277 0 0);
+  --primary-blue: oklch(0.614 0.208 255.8);
+  --primary-red: oklch(0.658 0.228 26.2);
+  --primary-icon: oklch(0.66 0 0);
 }
 
 .dark {
@@ -82,6 +85,9 @@
   --sidebar-inset: oklch(0.231 0 0);
   --inset-accent: oklch(0.256 0 0);
   --inset-accent-foreground: oklch(0.277 0 0);
+  --primary-blue: oklch(0.614 0.208 255.8);
+  --primary-red: oklch(0.658 0.228 26.2);
+  --primary-icon: oklch(0.66 0 0);
 }
 
 @theme inline {
@@ -123,6 +129,9 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-inset: var(--sidebar-inset);
   --color-inset-accent: var(--inset-accent);
+  --color-primary-blue: var(--primary-blue);
+  --color-primary-red: var(--primary-red);
+  --color-primary-icon: var(--primary-icon);
   --color-inset-accent-foreground: var(--inset-accent-foreground);
   --font-sans: var(--font-sans);
   --font-lora: var(--font-lora);
