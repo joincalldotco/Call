@@ -10,6 +10,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         {children}
         <Modals />
       </ContactsProvider>
+
       <SocketConnectionIndicator />
     </SocketProvider>
   );

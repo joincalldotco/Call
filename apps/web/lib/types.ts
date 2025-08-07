@@ -70,5 +70,7 @@ export interface Participant {
   id: string;
   name: string;
   email: string;
-  image: string;
+  image?: string | undefined;
+  joinedAt?: string | undefined;
+  leftAt?: string | null | undefined;
 }

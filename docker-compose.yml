@@ -28,3 +28,4 @@ services:
 volumes:
   postgres-data:
     name: call-postgres-data
+  redis_data: {}

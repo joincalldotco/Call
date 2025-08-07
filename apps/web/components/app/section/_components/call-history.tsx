@@ -13,6 +13,7 @@ import { cn } from "@call/ui/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreVertical, X, Loader2, Phone, Trash, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,11 +56,11 @@ export function CallHistory() {
       filtered = filtered.filter((call) => {
         const searchableFields = [
           call.name,
-          ...call.participants.map(p => p.name),
-          ...call.participants.map(p => p.email)
+          ...call.participants.map((p) => p.name),
+          ...call.participants.map((p) => p.email),
         ];
-        
-        return searchableFields.some(field => 
+
+        return searchableFields.some((field) =>
           field?.toLowerCase().includes(query)
         );
       });
@@ -77,8 +78,10 @@ export function CallHistory() {
       <div className="space-y-6">
         <div className="flex h-64 items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Loading call history...</p>
+            <Loader2 className="text-primary h-6 w-6 animate-spin" />
+            <p className="text-muted-foreground text-sm">
+              Loading call history...
+            </p>
           </div>
         </div>
       </div>
@@ -93,8 +96,12 @@ export function CallHistory() {
             <div className="rounded-full bg-red-50 p-3">
               <Phone className="h-8 w-8 text-red-500" />
             </div>
-            <p className="text-red-500 text-sm">Failed to load call history</p>
-            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+            <p className="text-sm text-red-500">Failed to load call history</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+            >
               Try Again
             </Button>
           </div>
@@ -117,7 +124,7 @@ export function CallHistory() {
                 placeholder="Search by call name or participant..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-10 py-2.5 h-11 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 h-11 rounded-lg border py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:ring-2"
               />
               <Icons.search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
               {searchQuery && (
@@ -125,26 +132,26 @@ export function CallHistory() {
                   variant="ghost"
                   size="icon"
                   onClick={clearSearch}
-                  className="absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 transform hover:bg-muted/50"
+                  className="hover:bg-muted/50 absolute right-2 top-1/2 h-7 w-7 -translate-y-1/2 transform"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
-        
           </div>
         ) : null}
-        
+
         {/* No results message */}
         {hasCallHistory && !hasSearchResults && (
           <div className="flex h-64 flex-col items-center justify-center text-center">
             <div className="flex flex-col items-center gap-4">
-              <div className="rounded-full bg-muted/50 p-4">
-                <Phone className="h-8 w-8 text-muted-foreground" />
+              <div className="bg-muted/50 rounded-full p-4">
+                <Phone className="text-muted-foreground h-8 w-8" />
               </div>
               <h3 className="text-lg font-medium">No calls found</h3>
               <p className="text-muted-foreground max-w-sm">
-                No calls match your search criteria. Try adjusting your search terms.
+                No calls match your search criteria. Try adjusting your search
+                terms.
               </p>
               {searchQuery && (
                 <Button variant="outline" size="sm" onClick={clearSearch}>
@@ -179,7 +186,7 @@ const CallHistoryCard = ({ call }: CallHistoryCardProps) => {
   const participantsToShow = 3;
   const remainingParticipants = call.participants.length - participantsToShow;
   const queryClient = useQueryClient();
-
+  const { onOpen } = useModal();
   const handleHideCall = async () => {
     try {
       await CALLS_QUERY.hideCall(call.id);
@@ -191,8 +198,60 @@ const CallHistoryCard = ({ call }: CallHistoryCardProps) => {
   };
 
   const handleViewUsers = () => {
-    // This could be implemented later to show a modal with all participants
-    console.log("View users clicked", call.participants);
+    const response = call.participants;
+    try {
+      if (response) {
+        const data = response;
+
+        onOpen("view-participants", {
+          participants: call.participants.map((p) => ({
+            id: p.id,
+            name: p.name,
+            email: p.email,
+            image: p.image,
+            joinedAt: call.joinedAt,
+            leftAt: call.leftAt ?? undefined,
+          })),
+          callInfo: {
+            id: call.id,
+            name: call.name,
+          },
+        });
+      } else {
+        console.warn("Failed to fetch latest participants, using cached data");
+        onOpen("view-participants", {
+          participants: call.participants.map((p) => ({
+            id: p.id,
+            name: p.name,
+            email: p.email,
+            image: p.image,
+            joinedAt: call.joinedAt,
+            leftAt: call.leftAt ?? undefined,
+          })),
+          callInfo: {
+            id: call.id,
+            name: call.name,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+
+      onOpen("view-participants", {
+        participants: call.participants.map((p) => ({
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          image: p.image,
+          joinedAt: call.joinedAt,
+          leftAt: call.leftAt ?? undefined,
+        })),
+        callInfo: {
+          id: call.id,
+          name: call.name,
+        },
+      });
+    }
   };
 
   return (
