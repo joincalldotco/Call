@@ -1,0 +1,14 @@
+{
+  "extends": "@call/typescript-config/react-library",
+  "compilerOptions": {
+    "incremental": false,
+    "module": "ESNext",
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": {
+      "@call/sdk/*": ["./src/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
+}
