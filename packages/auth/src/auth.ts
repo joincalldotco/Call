@@ -2,6 +2,8 @@ import { db } from "@call/db";
 import schema from "@call/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { extractTokenFromUrl } from "./utils/extract-token";
+import { sendMail } from "./utils/send-mail";
 
 if (!process.env.FRONTEND_URL || !process.env.BACKEND_URL) {
   throw new Error(
