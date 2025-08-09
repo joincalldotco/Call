@@ -5,6 +5,7 @@ import { teams, teamMembers, user as userTable } from "@call/db/schema";
 import { createId } from "@paralleldrive/cuid2";
 import { eq, inArray, and, desc } from "drizzle-orm";
 import type { ReqVariables } from "../../index.js";
+import { cache } from "@/lib/cache";
 
 const teamsRoutes = new Hono<{ Variables: ReqVariables }>();
 
@@ -19,6 +20,7 @@ teamsRoutes.post("/create", async (c) => {
   if (!user || !user.id) {
     return c.json({ message: "Unauthorized" }, 401);
   }
+
   let body;
   try {
     body = await c.req.json();
@@ -69,6 +71,9 @@ teamsRoutes.post("/create", async (c) => {
   }));
   await db.insert(teamMembers).values(teamMemberRows);
 
+  // Invalidate cache for all team members
+  await cache.invalidateTeamCache(teamId, memberIds);
+
   return c.json({ message: "Team created" });
 });
 
@@ -78,15 +83,28 @@ teamsRoutes.get("/", async (c) => {
   if (!user || !user.id) {
     return c.json({ message: "Unauthorized" }, 401);
   }
+
+  const cacheKey = cache.getUserTeamsKey(user.id);
+
+  // Try to get from cache first
+  const cachedTeams = await cache.get(cacheKey);
+  if (cachedTeams) {
+    console.log(`[CACHE HIT] Teams for user ${user.id}`);
+    return c.json({ teams: cachedTeams });
+  }
+
+  console.log(`[CACHE MISS] Teams for user ${user.id}`);
+
   const userTeams = await db
     .select({ teamId: teamMembers.teamId })
     .from(teamMembers)
     .where(eq(teamMembers.userId, user.id));
   const teamIds = userTeams.map((t) => t.teamId);
   if (teamIds.length === 0) {
+    await cache.set(cacheKey, [], 5); // Cache for 5 minutes
     return c.json({ teams: [] });
   }
-  // Fetch teams and order by createdAt DESC (latest first)
+
   const teamsList = await db
     .select({
       id: teams.id,
@@ -108,13 +126,13 @@ teamsRoutes.get("/", async (c) => {
     .from(teamMembers)
     .leftJoin(userTable, eq(teamMembers.userId, userTable.id))
     .where(inArray(teamMembers.teamId, teamIds));
-  // Group members by team
+
   const teamMembersMap: Record<
     string,
     Array<{ user_id: string; name: string; email: string; image: string | null }>
   > = {};
   for (const m of allTeamMembers) {
-    if (!m.teamId || !m.userId) continue; // skip if missing
+    if (!m.teamId || !m.userId) continue;
     if (!teamMembersMap[m.teamId]) teamMembersMap[m.teamId] = [];
     teamMembersMap[m.teamId]!.push({
       user_id: m.userId,
@@ -123,13 +141,17 @@ teamsRoutes.get("/", async (c) => {
       image: m.image ?? null,
     });
   }
-  // Build response, sorted by latest created first
+
   const response = teamsList.map((team) => ({
     id: team.id,
     name: team.name,
     creator_id: team.creatorId,
     members: teamMembersMap?.[team.id] || [],
   }));
+
+  // Cache the result for 5 second
+  await cache.set(cacheKey, response, 5);
+
   return c.json({ teams: response });
 });
 
@@ -143,6 +165,7 @@ teamsRoutes.post(":teamId/leave", async (c) => {
   if (!teamId) {
     return c.json({ message: "Team ID is required" }, 400);
   }
+
   // Check if user is a member of the team
   const [membership] = await db
     .select()
@@ -153,12 +176,23 @@ teamsRoutes.post(":teamId/leave", async (c) => {
   if (!membership) {
     return c.json({ message: "You are not a member of this team" }, 404);
   }
-  // Remove user from team_members
+
+  // Get all team members before deletion for cache invalidation
+  const allMembers = await db
+    .select({ userId: teamMembers.userId })
+    .from(teamMembers)
+    .where(eq(teamMembers.teamId, teamId));
+  const memberIds = allMembers.map((m) => m.userId);
+
   await db
     .delete(teamMembers)
     .where(
       and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, user.id))
     );
+
+  // Invalidate cache for all team members
+  await cache.invalidateTeamCache(teamId, memberIds);
+
   return c.json({ message: "Left team successfully" });
 });
 
@@ -172,6 +206,7 @@ teamsRoutes.post(":teamId/add-members", async (c) => {
   if (!teamId) {
     return c.json({ message: "Team ID is required" }, 400);
   }
+
   let body;
   try {
     body = await c.req.json();
@@ -189,13 +224,12 @@ teamsRoutes.post(":teamId/add-members", async (c) => {
     );
   }
   const { emails } = result.data;
-  // Find users by email
+
   const users = await db
     .select()
     .from(userTable)
     .where(inArray(userTable.email, emails));
   if (users.length !== emails.length) {
-    // Find which emails are missing
     const foundEmails = users.map((u) => u.email);
     const missing = emails.filter((email) => !foundEmails.includes(email));
     return c.json(
@@ -203,7 +237,7 @@ teamsRoutes.post(":teamId/add-members", async (c) => {
       400
     );
   }
-  // Check which users are already members
+
   const userIds = users.map((u) => u.id);
   const existingMembers = await db
     .select({ userId: teamMembers.userId })
@@ -219,7 +253,17 @@ teamsRoutes.post(":teamId/add-members", async (c) => {
       400
     );
   }
-  // Insert new members
+
+  // Get all current team members for cache invalidation
+  const allCurrentMembers = await db
+    .select({ userId: teamMembers.userId })
+    .from(teamMembers)
+    .where(eq(teamMembers.teamId, teamId));
+  const allMemberIds = [
+    ...allCurrentMembers.map((m) => m.userId),
+    ...newMemberIds,
+  ];
+
   const now = new Date();
   const rows = newMemberIds.map((uid) => ({
     teamId,
@@ -227,6 +271,10 @@ teamsRoutes.post(":teamId/add-members", async (c) => {
     createdAt: now,
   }));
   await db.insert(teamMembers).values(rows);
+
+  // Invalidate cache for all team members (existing + new)
+  await cache.invalidateTeamCache(teamId, allMemberIds);
+
   return c.json({ message: "Users added to team" });
 });
 

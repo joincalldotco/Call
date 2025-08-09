@@ -6,6 +6,7 @@ import { createId } from "@paralleldrive/cuid2";
 import { and, eq, or } from "drizzle-orm";
 import type { ReqVariables } from "../../index.js";
 import { sendMail } from "@call/auth/utils/send-mail";
+import { cache } from "@/lib/cache";
 
 const contactsRoutes = new Hono<{ Variables: ReqVariables }>();
 
@@ -18,7 +19,7 @@ const requestIdSchema = z.object({
 });
 
 contactsRoutes.post("/invite", async (c) => {
-  const user = c.get("user")!; // Middleware ensures user exists
+  const user = c.get("user")!;
   const senderId = user.id;
 
   try {
@@ -132,7 +133,6 @@ contactsRoutes.get("/requests", async (c) => {
         )
       );
 
-    // Ensure senderName and senderEmail are always present (fallback to empty string if null)
     const requests = pendingRequests.map((r) => ({
       ...r,
       senderName: r.senderName || "",
@@ -186,6 +186,12 @@ contactsRoutes.patch("/requests/:id/accept", async (c) => {
         { userId: userId, contactId: senderId, createdAt: new Date() },
         { userId: senderId, contactId: userId, createdAt: new Date() },
       ]);
+
+      // Invalidate contacts cache for both users
+      await Promise.all([
+        cache.del(cache.getUserContactsKey(userId)),
+        cache.del(cache.getUserContactsKey(senderId)),
+      ]);
     });
 
     return c.json({ message: "Contact request accepted." });
@@ -233,6 +239,17 @@ contactsRoutes.get("/", async (c) => {
   const user = c.get("user")!;
   const userId = user.id;
 
+  const cacheKey = cache.getUserContactsKey(userId);
+
+  // Try to get from cache first
+  const cachedContacts = await cache.get(cacheKey);
+  if (cachedContacts) {
+    console.log(`[CACHE HIT] Contacts for user ${userId}`);
+    return c.json({ contacts: cachedContacts });
+  }
+
+  console.log(`[CACHE MISS] Contacts for user ${userId}`);
+
   try {
     const userContacts = await db
       .select({
@@ -245,6 +262,9 @@ contactsRoutes.get("/", async (c) => {
       .from(contacts)
       .leftJoin(userTable, eq(contacts.contactId, userTable.id))
       .where(eq(contacts.userId, userId));
+
+    // Cache the result for 10 minutes (contacts don't change frequently)
+    await cache.set(cacheKey, userContacts, 600);
 
     return c.json({ contacts: userContacts });
   } catch (err) {
@@ -260,7 +280,6 @@ contactsRoutes.delete("/:id", async (c) => {
 
   try {
     await db.transaction(async (tx) => {
-      // Delete both sides of the contact relationship
       await tx
         .delete(contacts)
         .where(
@@ -270,6 +289,12 @@ contactsRoutes.delete("/:id", async (c) => {
           )
         );
     });
+
+    // Invalidate contacts cache for both users
+    await Promise.all([
+      cache.del(cache.getUserContactsKey(userId)),
+      cache.del(cache.getUserContactsKey(contactId)),
+    ]);
 
     return c.json({ message: "Contact deleted successfully." });
   } catch (err) {

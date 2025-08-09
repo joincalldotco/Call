@@ -1,11 +1,11 @@
 import { env } from "@/config/env";
-import { Redis } from "iovalkey";
+import { Redis } from "ioredis";
 
 const redisClient = new Redis({
-  port: env.VALKEY_PORT,
-  host: env.VALKEY_HOST,
-  username: env.VALKEY_USERNAME,
-  password: env.VALKEY_PASSWORD,
+  port: env.REDIS_PORT,
+  host: env.REDIS_HOST,
+  username: env.REDIS_USERNAME,
+  password: env.REDIS_PASSWORD,
 });
 
 redisClient.on("error", (err) => {
@@ -13,7 +13,7 @@ redisClient.on("error", (err) => {
 });
 
 redisClient.on("connect", () => {
-  console.log("Connected to Valkey");
+  console.log("Connected to Redis");
 });
 
 export default redisClient;

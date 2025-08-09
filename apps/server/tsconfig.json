@@ -8,12 +8,14 @@
     "moduleResolution": "bundler",
     "baseUrl": "./src",
     "paths": {
-      "@/*": ["./*.js"],
-      "@/config/*": ["./config/*.js"],
-      "@/validators": ["./validators/index.js"],
-      "@/validators/*": ["./validators/*.js"],
-      "@/routes": ["./routes/index.js"],
-      "@/routes/*": ["./routes/*.js"]
+      "@/*": ["*"],
+      "@/config/*": ["config/*"],
+      "@/lib": ["lib/index"],
+      "@/lib/*": ["lib/*"],
+      "@/validators": ["validators/index"],
+      "@/validators/*": ["validators/*"],
+      "@/routes": ["routes/index"],
+      "@/routes/*": ["routes/*"]
     },
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
