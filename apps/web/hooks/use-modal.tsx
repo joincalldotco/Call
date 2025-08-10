@@ -19,6 +19,7 @@ interface ModalData {
   team?: Team;
   participants?: Participant[];
   callInfo?: CallInfo;
+  selectedContact?: string;
 }
 
 interface ModalStore {
@@ -33,6 +34,6 @@ export const useModal = create<ModalStore>((set) => ({
   type: null,
   isOpen: false,
   data: {},
-  onOpen: (type, data?: ModalData) => set({ type, isOpen: true, data }),
-  onClose: () => set({ type: null, isOpen: false }),
+  onOpen: (type, data = {}) => set({ isOpen: true, type, data }),
+  onClose: () => set({ type: null, isOpen: false, data: {} }),
 }));

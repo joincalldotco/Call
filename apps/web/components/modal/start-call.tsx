@@ -13,7 +13,7 @@ import { LoadingButton } from "@call/ui/components/loading-button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -24,17 +24,31 @@ const formSchema = z.object({
 });
 
 export const StartCall = () => {
-  const { isOpen, onClose, type } = useModal();
+  const { isOpen, onClose, type, data } = useModal();
+  const { selectedContact } = data;
   const router = useRouter();
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
   const { user } = useSession();
+
+  useEffect(() => {
+    if (selectedContact) {
+      setSelectedContacts((prev) => {
+        if (prev.includes(selectedContact)) {
+          return prev;
+        }
+        return [...prev, selectedContact];
+      });
+    }
+  }, [selectedContact]);
 
   const { mutate: createCall, isPending } = useMutation({
     mutationFn: CALLS_QUERY.createCall,
     onSuccess: (data) => {
       if (selectedContacts.length > 0) {
         toast.success(
-          `Invitations sent to ${selectedContacts.length} contact${selectedContacts.length !== 1 ? "s" : ""}`
+          `Invitations sent to ${selectedContacts.length} contact${
+            selectedContacts.length !== 1 ? "s" : ""
+          }`
         );
       }
       onClose();
@@ -103,7 +117,9 @@ export const StartCall = () => {
             disabled={isPending}
           >
             {selectedContacts.length > 0
-              ? `Start with ${selectedContacts.length} contact${selectedContacts.length !== 1 ? "s" : ""}`
+              ? `Start with ${selectedContacts.length} contact${
+                  selectedContacts.length !== 1 ? "s" : ""
+                }`
               : "Start call"}
           </LoadingButton>
         </form>

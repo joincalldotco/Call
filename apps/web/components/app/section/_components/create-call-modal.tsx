@@ -15,9 +15,11 @@ interface Contact {
 export function CreateCallModal({
   onClose,
   onCallCreated,
+  selectedContact
 }: {
   onClose?: () => void;
   onCallCreated?: (callId: string) => void;
+  selectedContact?: string
 }) {
   const [meetingName, setMeetingName] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -30,8 +32,38 @@ export function CreateCallModal({
   const router = useRouter();
 
   useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contacts`, {
+          credentials: "include",
+        });
+        if (!res.ok) {
+          console.error("Failed to fetch contacts");
+          return;
+        };
+        const data = await res.json();
+        setContacts(data.contacts || []);
+      } catch (err) {
+        console.error("Failed to fetch contacts", err);
+      }
+    };
+    fetchContacts();
+  }, []);
+
+  useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (selectedContact) {
+      setSelectedMembers((prev) => {
+        if (prev.includes(selectedContact)) {
+          return prev;
+        }
+        return [...prev, selectedContact];
+      });
+    }
+  }, [selectedContact]);
 
   const handleMemberToggle = (email: string) => {
     setSelectedMembers((prev) =>
