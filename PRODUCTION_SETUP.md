@@ -43,9 +43,9 @@ RESEND_API_KEY=your_resend_api_key
 BETTER_AUTH_SECRET=your_generated_secret_from_better_auth
 
 # Redis/Valkey
-VALKEY_HOST=your_redis_host
-VALKEY_PORT=6379
-VALKEY_PASSWORD=your_redis_password
+REDIS_HOST=your_redis_host
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
 
 # Environment
 NODE_ENV=production
