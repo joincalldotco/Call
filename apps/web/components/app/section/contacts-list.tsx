@@ -23,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@call/ui/components/dropdown-menu";
+import { useModal } from "@/hooks/use-modal";
 
 interface Contact {
   id: string;
@@ -41,6 +42,7 @@ export default function ContactsList({ onAddContact }: ContactsListProps) {
   const [error, setError] = useState<string | null>(null);
   const [deletingContact, setDeletingContact] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
 
   const fetchContacts = async () => {
     setLoading(true);
@@ -223,6 +225,7 @@ interface ContactCardProps {
 }
 
 const ContactCard = ({ contact, onDeleteContact, isDeleting }: ContactCardProps) => {
+  const { onOpen } = useModal();
   return (
     <div className="bg-inset-accent flex flex-col gap-3 rounded-xl border p-4">
       <div className="flex items-center justify-between">
@@ -236,7 +239,7 @@ const ContactCard = ({ contact, onDeleteContact, isDeleting }: ContactCardProps)
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onOpen("start-call", { selectedContact: contact.email })}>
               <Phone className="mr-2 h-4 w-4" />
               Call Contact
             </DropdownMenuItem>
