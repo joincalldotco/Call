@@ -56,7 +56,6 @@ export function CreateCallModal({
 
   useEffect(() => {
     if (selectedContact) {
-      console.log("🔍 [CALLS DEBUG] Selected contact:", selectedContact);
       setSelectedMembers((prev) => {
         if (prev.includes(selectedContact)) {
           return prev;
