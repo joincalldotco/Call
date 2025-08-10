@@ -162,14 +162,15 @@ export function ParticipantsSidebar({
 
   // Generate shareable invite URL for the current call
   const invitePath = usePathname();
-  const inviteURL = `${window.location.origin}/${invitePath}`;
+  const inviteURL = `${window.location.origin}${invitePath}`;
 
   const copyInviteURL = async () => {
     try {
       await navigator.clipboard.writeText(inviteURL);
-      toast.success("copied!");
+      toast.success("Invite link copied");
     } catch (error) {
-      toast.error("Failed to copy URL");
+      console.error("Error copying invite URL:", error);
+      toast.error("Failed to copy invite link");
     }
   };
 
