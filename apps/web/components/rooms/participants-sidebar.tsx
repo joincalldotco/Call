@@ -170,7 +170,6 @@ export function ParticipantsSidebar({
       toast.success("copied!");
     } catch (error) {
       toast.error("Failed to copy URL");
-      console.log(error);
     }
   };
 
@@ -357,7 +356,7 @@ export function ParticipantsSidebar({
             </>
           )}
         </div>
-        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center">
+        <div className="absolute bottom-4 left-4 right-4">
           <Button onClick={copyInviteURL} variant="outline" className="w-full">
             Invite
           </Button>
