@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@call/ui/components/sheet";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   FiCheck,
@@ -156,6 +157,20 @@ export function ParticipantsSidebar({
       console.error("Error rejecting request:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Generate shareable invite URL for the current call
+  const invitePath = usePathname();
+  const inviteURL = `${window.location.origin}${invitePath}`;
+
+  const copyInviteURL = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteURL);
+      toast.success("Invite link copied");
+    } catch (error) {
+      console.error("Error copying invite URL:", error);
+      toast.error("Failed to copy invite link");
     }
   };
 
@@ -341,6 +356,11 @@ export function ParticipantsSidebar({
               </div>
             </>
           )}
+        </div>
+        <div className="absolute bottom-4 left-4 right-4">
+          <Button onClick={copyInviteURL} variant="outline" className="w-full">
+            Invite
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
