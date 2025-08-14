@@ -20,9 +20,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useModal } from "@/hooks/use-modal";
-import { CALLS_QUERY } from "@/lib/QUERIES";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 
 import {
   DropdownMenu,
@@ -255,24 +252,12 @@ const ContactCard = ({
   isDeleting,
 }: ContactCardProps) => {
   const { user } = useSession();
-  const router = useRouter();
-  const { mutate: createCall, isPending: isInitiatingCall } = useMutation({
-    mutationFn: CALLS_QUERY.createCall,
-    onSuccess: (data) => {
-      toast.success(`Call invitation sent to ${contact.name || contact.email}`);
-      router.push(`/app/call/${data.callId}`);
-    },
-    onError: () => {
-      toast.error("Failed to create call");
-    },
-  });
+  const { onOpen } = useModal();
 
   const handleCallContact = () => {
-    const userName = user?.name || "User";
-
-    createCall({
-      name: `Call with ${contact.name || contact.email}`,
-      members: [contact.email],
+    onOpen("call-contact", {
+      contactEmail: contact.email,
+      contactName: contact.name,
     });
   };
 
@@ -284,21 +269,14 @@ const ContactCard = ({
         </h1>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" disabled={isInitiatingCall}>
+            <Button variant="ghost" size="icon">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={handleCallContact}
-              disabled={isInitiatingCall}
-            >
-              {isInitiatingCall ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Phone className="mr-2 h-4 w-4" />
-              )}
-              {isInitiatingCall ? "Calling..." : "Call Contact"}
+            <DropdownMenuItem onClick={handleCallContact}>
+              <Phone className="mr-2 h-4 w-4" />
+              Call Contact
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onDeleteContact(contact.id, contact.email)}
@@ -339,7 +317,9 @@ const NoContactsFound = ({ onAddContact }: { onAddContact?: () => void }) => {
     <div className="bg-inset-accent border-inset-accent-foreground col-span-full flex h-96 flex-col items-center justify-center gap-4 rounded-xl border p-4 text-center">
       <div className="flex flex-col items-center">
         <h1 className="text-lg font-medium">
-          {isGuest ? "Sign in to manage contacts" : "You don\'t have any contacts yet."}
+          {isGuest
+            ? "Sign in to manage contacts"
+            : "You don\'t have any contacts yet."}
         </h1>
         <p className="text-muted-foreground">
           {isGuest
