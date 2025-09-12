@@ -8,6 +8,8 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { ReqVariables } from "../../index.js";
+import { createId } from "@paralleldrive/cuid2";
+import { cache } from "@/lib/cache";
 
 const authRouter = new Hono<{ Variables: ReqVariables }>();
 
@@ -80,6 +82,9 @@ authRouter.patch("/update-profile", async (c) => {
       .set({ name, updatedAt: new Date() })
       .where(eq(userTable.id, user.id));
 
+    // Invalidate user-related caches
+    await cache.invalidateUserCache(user.id);
+
     return c.json({ message: "Profile updated successfully" });
   } catch (err) {
     console.error("[PATCH /update-profile] Error:", err);
@@ -125,6 +130,9 @@ authRouter.patch("/update-profile-image", async (c) => {
         updatedAt: new Date(),
       })
       .where(eq(userTable.id, user.id));
+
+    // Invalidate user-related caches
+    await cache.invalidateUserCache(user.id);
 
     return c.json({
       message: "Profile image updated successfully",

@@ -24,7 +24,6 @@ export const env = createEnv({
         "BETTER_AUTH_SECRET must be at least 32 characters long for security."
       ),
 
-
     GOOGLE_CLIENT_ID: z
       .string({
         message: "The GOOGLE_CLIENT_ID environment variable is required.",
@@ -80,6 +79,30 @@ export const env = createEnv({
       .default("1284")
       .transform((val) => parseInt(val, 10))
       .pipe(z.number().min(1).max(65535)),
+
+    // Redis/Valkey configuration
+    REDIS_HOST: z
+      .string({ message: "The REDIS_HOST environment variable is required." })
+      .default("localhost"),
+
+    REDIS_PORT: z
+      .string({ message: "The REDIS_PORT environment variable is optional." })
+      .optional()
+      .default("6379")
+      .transform((val) => parseInt(val, 10))
+      .pipe(z.number().min(1).max(65535)),
+
+    REDIS_USERNAME: z
+      .string({
+        message: "The REDIS_USERNAME environment variable is optional.",
+      })
+      .optional(),
+
+    REDIS_PASSWORD: z
+      .string({
+        message: "The REDIS_PASSWORD environment variable is optional.",
+      })
+      .optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
