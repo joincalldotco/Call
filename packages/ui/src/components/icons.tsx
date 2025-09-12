@@ -54,7 +54,7 @@ export const Icons = {
         clipRule="evenodd"
         d="M8 0C3.58 0 0 3.58 0 8C0 11.54 2.29 14.53 5.47 15.59C5.87 15.66 6.02 15.42 6.02 15.21C6.02 15.02 6.01 14.39 6.01 13.72C4 14.09 3.48 13.23 3.32 12.78C3.23 12.55 2.84 11.84 2.5 11.65C2.22 11.5 1.82 11.13 2.49 11.12C3.12 11.11 3.57 11.7 3.72 11.94C4.44 13.15 5.59 12.81 6.05 12.6C6.12 12.08 6.33 11.73 6.56 11.53C4.78 11.33 2.92 10.64 2.92 7.58C2.92 6.71 3.23 5.99 3.74 5.43C3.66 5.23 3.38 4.41 3.82 3.31C3.82 3.31 4.49 3.1 6.02 4.13C6.66 3.95 7.34 3.86 8.02 3.86C8.7 3.86 9.38 3.95 10.02 4.13C11.55 3.09 12.22 3.31 12.22 3.31C12.66 4.41 12.38 5.23 12.3 5.43C12.81 5.99 13.12 6.7 13.12 7.58C13.12 10.65 11.25 11.33 9.47 11.53C9.76 11.78 10.01 12.26 10.01 13.01C10.01 14.08 10 14.94 10 15.21C10 15.42 10.15 15.67 10.55 15.59C13.71 14.53 16 11.53 16 8C16 3.58 12.42 0 8 0Z"
         transform="scale(64)"
-        className="fill-primary-icon"
+        className="fill-[#ffffff]"
       />
     </svg>
   ),
@@ -154,28 +154,40 @@ export const Icons = {
       <g clipPath="url(#clip0_118_304)">
         <path
           d="M5.625 8.23923C6.7296 8.23923 7.625 7.34423 7.625 6.23923C7.625 5.13423 6.7296 4.23923 5.625 4.23923C4.5204 4.23923 3.625 5.13423 3.625 6.23923C3.625 7.34423 4.5204 8.23923 5.625 8.23923Z"
-          stroke="#929292"
+          className={cn(
+            "stroke-primary-icon transition-all duration-300",
+            props.fill
+          )}
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M9.48384 15.1112C10.0068 14.9362 10.3138 14.3672 10.1198 13.8522C9.43484 12.0342 7.68384 10.7402 5.62584 10.7402C3.56784 10.7402 1.81684 12.0342 1.13184 13.8522C0.937844 14.3682 1.24484 14.9372 1.76784 15.1112C2.72984 15.4322 4.04884 15.7392 5.62684 15.7392C7.20484 15.7392 8.52284 15.4322 9.48384 15.1112Z"
-          stroke="#929292"
+          className={cn(
+            "stroke-primary-icon transition-all duration-300",
+            props.fill
+          )}
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M11.875 5.73923C12.9796 5.73923 13.875 4.84423 13.875 3.73923C13.875 2.63423 12.9796 1.73923 11.875 1.73923C10.7704 1.73923 9.875 2.63423 9.875 3.73923C9.875 4.84423 10.7704 5.73923 11.875 5.73923Z"
-          stroke="#929292"
+          className={cn(
+            "stroke-primary-icon transition-all duration-300",
+            props.fill
+          )}
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <path
           d="M13.0285 13.176C14.0969 13.0732 15.0182 12.8501 15.7325 12.6113C16.2555 12.4363 16.5625 11.8672 16.3685 11.3523C15.6835 9.53422 13.9325 8.24023 11.8745 8.24023C11.0353 8.24023 10.2535 8.46583 9.56738 8.84423"
-          stroke="#929292"
+          className={cn(
+            "stroke-primary-icon transition-all duration-300",
+            props.fill
+          )}
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -205,7 +217,7 @@ export const Icons = {
     >
       <path
         d="M18.6361 1.52293C17.1907 0.857681 15.6648 0.385741 14.0973 0.119141C13.8828 0.504601 13.6888 0.901181 13.5159 1.30723C11.8463 1.05431 10.1484 1.05431 8.47881 1.30723C8.30587 0.90122 8.1118 0.504641 7.8974 0.119141C6.32897 0.387991 4.80205 0.861061 3.35518 1.52641C0.482762 5.79864 -0.295908 9.96481 0.0934218 14.0717C1.77558 15.3211 3.6584 16.2714 5.66003 16.881C6.11074 16.2717 6.50956 15.6252 6.85226 14.9484C6.20135 14.7041 5.57311 14.4025 4.9748 14.0474C5.13227 13.9326 5.28627 13.8143 5.43508 13.6995C7.17601 14.5225 9.0761 14.9492 11 14.9492C12.9238 14.9492 14.8239 14.5225 16.5648 13.6995C16.7154 13.823 16.8694 13.9413 17.0251 14.0474C16.4257 14.4031 15.7963 14.7052 15.1442 14.9502C15.4865 15.6266 15.8853 16.2725 16.3364 16.881C18.3398 16.2738 20.224 15.324 21.9065 14.0735C22.3633 9.31071 21.1261 5.18285 18.6361 1.52293ZM7.34541 11.546C6.26047 11.546 5.36414 10.5562 5.36414 9.33851C5.36414 8.12091 6.22932 7.12241 7.34195 7.12241C8.45458 7.12241 9.344 8.12091 9.325 9.33851C9.3059 10.5562 8.45112 11.546 7.34541 11.546ZM14.6545 11.546C13.5678 11.546 12.675 10.5562 12.675 9.33851C12.675 8.12091 13.5401 7.12241 14.6545 7.12241C15.7689 7.12241 16.6514 8.12091 16.6323 9.33851C16.6133 10.5562 15.7602 11.546 14.6545 11.546Z"
-        className="fill-primary-icon"
+        className="fill-[#ffffff]"
         fillOpacity="3"
       />
     </svg>
@@ -239,7 +251,7 @@ export const Icons = {
       {...props}
     >
       <path
-        className="fill-primary-icon"
+        className="fill-[#ffffff]"
         d="M714.163 519.284 1160.89 0h-105.86L667.137 450.887 357.328 0H0l468.492 681.821L0 1226.37h105.866l409.625-476.152 327.181 476.152H1200L714.137 519.284h.026ZM569.165 687.828l-47.468-67.894-377.686-540.24h162.604l304.797 435.991 47.468 67.894 396.2 566.721H892.476L569.165 687.854v-.026Z"
       />
     </svg>
@@ -296,8 +308,10 @@ export const Icons = {
     >
       <path
         d="M9 18C8.33663 18 7.79886 17.4622 7.79886 16.7989V1.20114C7.79886 0.537769 8.33663 0 9 0V0C9.66337 0 10.2011 0.537768 10.2011 1.20114V16.7989C10.2011 17.4622 9.66337 18 9 18V18ZM1.23237 10.2324C0.55175 10.2324 0 9.68062 0 9V9C0 8.31938 0.551749 7.76764 1.23237 7.76764H16.7676C17.4482 7.76764 18 8.31938 18 9V9C18 9.68062 17.4483 10.2324 16.7676 10.2324H8.96382H1.23237Z"
-        fill="#929292"
-        fillOpacity="3"
+        className={cn(
+          "fill-primary-icon fill-black transition-all duration-300",
+          props.fill
+        )}
       />
     </svg>
   ),
@@ -311,7 +325,7 @@ export const Icons = {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g clip-path="url(#clip0_312_6100)">
+      <g clipPath="url(#clip0_312_6100)">
         <path
           d="M23.1817 6.69199C22.6683 6.38932 22.051 6.37999 21.531 6.66665L18.667 8.24132V15.7573L21.5297 17.332C21.783 17.472 22.059 17.5413 22.335 17.5413C22.627 17.5413 22.919 17.4627 23.1817 17.308C23.695 17.004 24.0003 16.468 24.0003 15.872V8.12799C24.0003 7.53199 23.695 6.99599 23.1817 6.69199Z"
           className={cn(
@@ -332,6 +346,55 @@ export const Icons = {
           <rect width="24" height="24" fill="white" />
         </clipPath>
       </defs>
+    </svg>
+  ),
+
+  videoOffIcon: (props: IconProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      height="18"
+      width="18"
+      viewBox="0 0 18 18"
+      {...props}
+    >
+      <g fill="#929292" className="nc-icon-wrapper">
+        <path
+          d="M12.25,8l4.259-2.342c.333-.183,.741,.058,.741,.438v5.809c0,.38-.408,.621-.741,.438l-4.259-2.342"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+          className={cn(
+            "stroke-primary-icon transition-all duration-300",
+            props.fill
+          )}
+        ></path>
+        <rect
+          x="1.75"
+          y="3.75"
+          width="10.5"
+          height="10.5"
+          rx="2"
+          ry="2"
+          fill="none"
+          className={cn(
+            "stroke-primary-icon transition-all duration-300",
+            props.fill
+          )}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+        ></rect>
+        <circle
+          cx="4.75"
+          cy="6.75"
+          r=".75"
+          className={cn(
+            "fill-primary-icon transition-all duration-300",
+            props.fill
+          )}
+        ></circle>
+      </g>
     </svg>
   ),
 
@@ -361,6 +424,47 @@ export const Icons = {
     </svg>
   ),
 
+  micOffIcon: (props: IconProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      {...props}
+    >
+      <g fill="#929292">
+        <path
+          d="M4.583 13.417L5.649 12.351C4.345 11.345 3.5 9.771 3.5 8C3.5 7.586 3.164 7.25 2.75 7.25C2.336 7.25 2 7.586 2 8C2 10.185 3.01 12.133 4.583 13.417Z"
+          className={cn(
+            "fill-primary-icon transition-all duration-300",
+            props.fill
+          )}
+        ></path>
+        <path
+          d="M6.721 11.279L13 5C13 2.794 11.206 1 9 1C6.794 1 5 2.794 5 5V8C5 9.358 5.683 10.556 6.721 11.279Z"
+          className={cn(
+            "fill-primary-icon transition-all duration-300",
+            props.fill
+          )}
+        ></path>
+        <path
+          d="M1.99999 16.75C1.80799 16.75 1.61599 16.677 1.46999 16.53C1.17699 16.237 1.17699 15.762 1.46999 15.469L15.47 1.46999C15.763 1.17699 16.238 1.17699 16.531 1.46999C16.824 1.76299 16.824 2.23799 16.531 2.53099L2.52999 16.53C2.38399 16.676 2.19199 16.75 1.99999 16.75Z"
+          className={cn(
+            "fill-primary-icon transition-all duration-300",
+            props.fill
+          )}
+        ></path>
+        <path
+          d="M15.9998 8C15.9998 7.58579 15.664 7.25 15.2498 7.25C14.8356 7.25 14.4998 7.58579 14.4998 8C14.4998 11.0378 12.0376 13.5 8.99979 13.5C8.71828 13.5 8.44255 13.479 8.17363 13.4385C7.76403 13.3769 7.38203 13.659 7.32041 14.0686C7.2588 14.4782 7.5409 14.8602 7.9505 14.9219C8.04964 14.9368 8.14941 14.9496 8.24979 14.9603V16.25C8.24979 16.6642 8.58557 17 8.99979 17C9.414 17 9.74979 16.6642 9.74979 16.25V14.9603C13.2633 14.5861 15.9998 11.6128 15.9998 8Z"
+          className={cn(
+            "fill-primary-icon transition-all duration-300",
+            props.fill
+          )}
+        ></path>
+      </g>
+    </svg>
+  ),
+
   messageIcon: (props: IconProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -372,8 +476,93 @@ export const Icons = {
     >
       <path
         d="M11.9999 2.40002C6.7067 2.40002 2.3999 6.70683 2.3999 12C2.3999 13.728 2.8655 15.3468 3.6683 16.7496L2.4467 20.4156C2.3387 20.7396 2.4227 21.096 2.6639 21.3372C2.8355 21.5088 3.0647 21.6012 3.2999 21.6012C3.3959 21.6012 3.4919 21.5856 3.5843 21.5544L7.2503 20.3328C8.6531 21.1356 10.2719 21.6012 11.9999 21.6012C17.2931 21.6012 21.5999 17.2944 21.5999 12.0012C21.5999 6.70803 17.2931 2.40002 11.9999 2.40002Z"
-        className="fill-primary-icon"
+        className={cn(
+          "fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
       />
+    </svg>
+  ),
+
+  gotMessageIcon: (props: IconProps) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="size-5"
+      aria-label="Unread messages"
+      {...props}
+    >
+      <path
+        d="M12.0004 2.40002C6.70719 2.40002 2.40039 6.70683 2.40039 12C2.40039 13.728 2.86599 15.3468 3.66879 16.7496L2.44719 20.4156C2.33919 20.7396 2.42319 21.096 2.66439 21.3372C2.83599 21.5088 3.06519 21.6012 3.30039 21.6012C3.39639 21.6012 3.49239 21.5856 3.58479 21.5544L7.25079 20.3328C8.65359 21.1356 10.2724 21.6012 12.0004 21.6012C17.2936 21.6012 21.6004 17.2944 21.6004 12.0012C21.6004 6.70803 17.2936 2.40002 12.0004 2.40002Z"
+        fill="#929292"
+      />
+      <g filter="url(#filter0_di_14_47)">
+        <circle cx="17.5" cy="3.5" r="2.5" fill="#FF3E3E" />
+      </g>
+      <defs>
+        <filter
+          id="filter0_di_14_47"
+          x="14"
+          y="0"
+          width="7"
+          height="7"
+          filterUnits="userSpaceOnUse"
+          color-interpolation-filters="sRGB"
+        >
+          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feOffset />
+          <feGaussianBlur stdDeviation="0.5" />
+          <feComposite in2="hardAlpha" operator="out" />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+          />
+          <feBlend
+            mode="normal"
+            in2="BackgroundImageFix"
+            result="effect1_dropShadow_14_47"
+          />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="effect1_dropShadow_14_47"
+            result="shape"
+          />
+          <feColorMatrix
+            in="SourceAlpha"
+            type="matrix"
+            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+            result="hardAlpha"
+          />
+          <feMorphology
+            radius="1"
+            operator="erode"
+            in="SourceAlpha"
+            result="effect2_innerShadow_14_47"
+          />
+          <feOffset />
+          <feGaussianBlur stdDeviation="0.15" />
+          <feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1" />
+          <feColorMatrix
+            type="matrix"
+            values="0 0 0 0 1 0 0 0 0 0.00673089 0 0 0 0 0.00673089 0 0 0 0.25 0"
+          />
+          <feBlend
+            mode="normal"
+            in2="shape"
+            result="effect2_innerShadow_14_47"
+          />
+        </filter>
+      </defs>
     </svg>
   ),
 
@@ -405,7 +594,10 @@ export const Icons = {
     >
       <path
         d="M16.3334 11.2712L13.0823 9.82787C12.29 9.47563 11.3589 9.70121 10.8156 10.3768L9.44394 11.6977C7.99172 10.7488 6.75172 9.5077 5.80283 8.05325L7.14019 6.6873C7.81685 6.14508 8.04352 5.21285 7.69241 4.42063L6.24796 1.1673C5.86685 0.30952 4.93131 -0.141591 4.02131 0.0928535L1.82728 0.664365C0.887276 0.908809 0.279498 1.81992 0.412832 2.78325C1.45061 10.171 7.33394 16.0554 14.7239 17.0932C14.8128 17.1054 14.8995 17.111 14.9862 17.111C15.8462 17.111 16.6173 16.531 16.8406 15.6777L17.4067 13.4957C17.6412 12.5879 17.19 11.6523 16.3334 11.2712Z"
-        fill="#929292"
+        className={cn(
+          "fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
       />
     </svg>
   ),
@@ -422,15 +614,24 @@ export const Icons = {
     >
       <path
         d="M5.75 3.5C5.336 3.5 5 3.164 5 2.75V0.75C5 0.336 5.336 0 5.75 0C6.164 0 6.5 0.336 6.5 0.75V2.75C6.5 3.164 6.164 3.5 5.75 3.5Z"
-        fill="#929292"
+        className={cn(
+          "fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
       />
       <path
         d="M12.25 3.5C11.836 3.5 11.5 3.164 11.5 2.75V0.75C11.5 0.336 11.836 0 12.25 0C12.664 0 13 0.336 13 0.75V2.75C13 3.164 12.664 3.5 12.25 3.5Z"
-        fill="#929292"
+        className={cn(
+          "fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
       />
       <path
         d="M13.75 2H4.25C2.733 2 1.5 3.233 1.5 4.75V13.25C1.5 14.767 2.733 16 4.25 16H13.75C15.267 16 16.5 14.767 16.5 13.25V4.75C16.5 3.233 15.267 2 13.75 2ZM13.75 14.5H4.25C3.561 14.5 3 13.939 3 13.25V7H15V13.25C15 13.939 14.439 14.5 13.75 14.5Z"
-        fill="#929292"
+        className={cn(
+          "fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
       />
     </svg>
   ),
@@ -449,38 +650,56 @@ export const Icons = {
         fillRule="evenodd"
         clipRule="evenodd"
         d="M16.4939 11.8635C16.6879 12.3785 16.3809 12.9475 15.8579 13.1225C14.9813 13.4153 13.8076 13.6965 12.4106 13.7436C12.3923 13.6857 12.3723 13.6278 12.3505 13.5698C11.7792 12.0536 10.6788 10.7859 9.29678 9.97266C8.65196 9.59318 11.7222 8.75153 11.9999 8.75153C14.0579 8.75153 15.8089 10.0455 16.4939 11.8635Z"
-        fill="#929292"
+        className={cn(
+          "fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
         fillOpacity="0.3"
       />
       <path
         d="M12 6.25C13.1046 6.25 14 5.35457 14 4.25C14 3.14543 13.1046 2.25 12 2.25C10.8954 2.25 10 3.14543 10 4.25C10 5.35457 10.8954 6.25 12 6.25Z"
-        fill="#929292"
+        className={cn(
+          "fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
         fillOpacity="0.3"
       />
       <path
         d="M5.75 8.75C6.85457 8.75 7.75 7.85457 7.75 6.75C7.75 5.64543 6.85457 4.75 5.75 4.75C4.64543 4.75 3.75 5.64543 3.75 6.75C3.75 7.85457 4.64543 8.75 5.75 8.75Z"
-        stroke="#929292"
+        className={cn(
+          "stroke-primary-icon transition-all duration-300",
+          props.fill
+        )}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M9.60884 15.622C10.1318 15.447 10.4388 14.878 10.2448 14.363C9.55984 12.545 7.80884 11.251 5.75084 11.251C3.69284 11.251 1.94184 12.545 1.25684 14.363C1.06284 14.879 1.36984 15.448 1.89284 15.622C2.85484 15.943 4.17384 16.25 5.75184 16.25C7.32984 16.25 8.64784 15.943 9.60884 15.622Z"
-        stroke="#929292"
+        className={cn(
+          "stroke-primary-icon transition-all duration-300",
+          props.fill
+        )}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M12 6.25C13.1046 6.25 14 5.35457 14 4.25C14 3.14543 13.1046 2.25 12 2.25C10.8954 2.25 10 3.14543 10 4.25C10 5.35457 10.8954 6.25 12 6.25Z"
-        stroke="#929292"
+        className={cn(
+          "stroke-primary-icon transition-all duration-300",
+          props.fill
+        )}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M13.1535 13.6873C14.2219 13.5845 15.1432 13.3614 15.8575 13.1226C16.3805 12.9476 16.6875 12.3785 16.4935 11.8636C15.8085 10.0455 14.0575 8.75153 11.9995 8.75153C11.1603 8.75153 10.3785 8.97713 9.69238 9.35553"
-        stroke="#929292"
+        className={cn(
+          "stroke-primary-icon transition-all duration-300",
+          props.fill
+        )}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -500,26 +719,37 @@ export const Icons = {
     >
       <path
         d="M12.1275 8.0951L10.8549 6.8225C10.7451 6.7118 10.5849 6.6677 10.4337 6.7028C10.2816 6.7388 10.1592 6.8504 10.1106 6.9989L9.4743 8.9078C9.4203 9.0698 9.46259 9.248 9.58319 9.3686C9.66869 9.4541 9.78389 9.5 9.90179 9.5C9.94949 9.5 9.99719 9.4928 10.044 9.4766L11.9529 8.8403C12.1014 8.7908 12.213 8.6693 12.249 8.5172C12.285 8.366 12.2391 8.2058 12.1293 8.096L12.1275 8.0951Z"
-        className="fill-primary-icon"
+        className={cn(
+          "fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
       />
       <path
         d="M5.8498 10.4C6.84392 10.4 7.6498 9.59412 7.6498 8.6C7.6498 7.60589 6.84392 6.8 5.8498 6.8C4.85569 6.8 4.0498 7.60589 4.0498 8.6C4.0498 9.59412 4.85569 10.4 5.8498 10.4Z"
-        stroke="#929292"
+        className={cn(
+          "stroke-primary-icon transition-all duration-300",
+          props.fill
+        )}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M2.36328 15.8C2.76288 14.2475 4.17228 13.1 5.84988 13.1C7.52748 13.1 8.93688 14.2475 9.33648 15.8"
-        stroke="#929292"
+        className={cn(
+          "stroke-primary-icon transition-all duration-300",
+          props.fill
+        )}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M13.0496 8.6C14.5408 8.6 15.7496 7.39117 15.7496 5.9C15.7496 4.40883 14.5408 3.2 13.0496 3.2C11.5584 3.2 10.3496 4.40883 10.3496 5.9C10.3496 7.39117 11.5584 8.6 13.0496 8.6Z"
-        fill="#929292"
-        stroke="#929292"
+        className={cn(
+          "stroke-primary-icon fill-primary-icon transition-all duration-300",
+          props.fill
+        )}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -553,7 +783,10 @@ export const Icons = {
     >
       <path
         d="M15.393 1.11032C14.8423 0.55837 14.0382 0.361054 13.2955 0.602367L1.4371 4.4127C0.647701 4.66601 0.102319 5.33529 0.0129778 6.15788C-0.077697 6.98181 0.311671 7.75374 1.02773 8.17237L4.74007 10.3455L8.39372 6.6925C8.78443 6.30187 9.41782 6.30187 9.80852 6.6925C10.1992 7.08313 10.1992 7.71641 9.80852 8.10704L6.16019 11.7547L8.32839 15.4731C8.70575 16.121 9.37381 16.501 10.1072 16.501C10.1846 16.501 10.2619 16.497 10.3406 16.4876C11.1646 16.3983 11.834 15.853 12.0887 15.0638L15.8997 3.20614C16.1384 2.46354 15.9437 1.66094 15.393 1.11032Z"
-        fill="var(--color-primary-blue)"
+        className={cn(
+          "fill-primary-blue transition-all duration-300",
+          props.fill
+        )}
       />
     </svg>
   ),
@@ -561,35 +794,20 @@ export const Icons = {
   //sidebar-close
   sidebarClose: (props: IconProps) => (
     <svg
-      height="20"
       width="20"
+      height="16"
+      viewBox="0 0 20 16"
       fill="none"
-      viewBox="0 0 20 20"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
-        d="M19 13.5714V4.42857C19 2.53503 17.6569 1 16 1H4C2.34315 1 1 2.53503 1 4.42857V13.5714C1 15.465 2.34315 17 4 17H16C17.6569 17 19 15.465 19 13.5714Z"
-        stroke="currentColor"
-        strokeLinecap="square"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-      <path
-        d="M5 11.7142C5.48325 11.7142 5.875 12.162 5.875 12.7142C5.875 13.2664 5.48325 13.7142 5 13.7142C4.51675 13.7142 4.125 13.2664 4.125 12.7142C4.125 12.162 4.51675 11.7142 5 11.7142ZM5 7.99993C5.48325 7.99993 5.875 8.4477 5.875 8.99993C5.875 9.55216 5.48325 9.99993 5 9.99993C4.51675 9.99993 4.125 9.55216 4.125 8.99993C4.125 8.4477 4.51675 7.99993 5 7.99993ZM5 4.28564C5.48325 4.28564 5.875 4.73336 5.875 5.28564C5.875 5.83793 5.48325 6.28564 5 6.28564C4.51675 6.28564 4.125 5.83793 4.125 5.28564C4.125 4.73336 4.51675 4.28564 5 4.28564Z"
-        className="fill-primary-icon"
-        stroke="currentColor"
-        strokeWidth="0.75"
-      />
-      <path
-        d="M9 1V17"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
+        d="M16.6668 0.5H3.3335C1.95516 0.5 0.833496 1.62167 0.833496 3V13C0.833496 14.3783 1.95516 15.5 3.3335 15.5H16.6668C18.0452 15.5 19.1668 14.3783 19.1668 13V3C19.1668 1.62167 18.0452 0.5 16.6668 0.5ZM2.50016 13V3C2.50016 2.54083 2.87433 2.16667 3.3335 2.16667H12.5002V13.8333H3.3335C2.87433 13.8333 2.50016 13.4592 2.50016 13Z"
+        fill="#929292"
       />
     </svg>
   ),
+
   //friends-Icon-for-now-lol
   friends: (props: IconProps) => (
     <svg

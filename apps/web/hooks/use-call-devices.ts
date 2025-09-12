@@ -2,9 +2,25 @@
 
 import { useCallContext } from "@/contexts/call-context";
 import { useCallback, useEffect } from "react";
-
+import { toast } from "sonner";
 export const useCallDevices = () => {
   const { state, dispatch, mediasoup } = useCallContext();
+
+  const enumerate = useCallback(async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      dispatch({
+        type: "SET_VIDEO_DEVICES",
+        payload: devices.filter((d) => d.kind === "videoinput"),
+      });
+      dispatch({
+        type: "SET_AUDIO_DEVICES",
+        payload: devices.filter((d) => d.kind === "audioinput"),
+      });
+    } catch (error) {
+      console.error("[Call] Failed to enumerate devices", error);
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
@@ -19,12 +35,36 @@ export const useCallDevices = () => {
     });
   }, [dispatch]);
 
+  useEffect(() => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.addEventListener) {
+      return;
+    }
+    const onDeviceChange = () => {
+      enumerate();
+    };
+    navigator.mediaDevices.addEventListener("devicechange", onDeviceChange);
+    return () => {
+      navigator.mediaDevices.removeEventListener(
+        "devicechange",
+        onDeviceChange
+      );
+    };
+  }, [enumerate]);
+
   const handleDeviceChange = useCallback(
     async (type: "video" | "audio", deviceId: string) => {
-      if (!state.joined || !mediasoup.localStream) {
-        console.warn(
-          "[Call] Cannot change device - not joined or no local stream"
-        );
+      // Pre-join: just set the selected device; preview effect will refresh
+      if (!state.joined) {
+        if (type === "video") {
+          dispatch({ type: "SET_SELECTED_VIDEO", payload: deviceId });
+        } else {
+          dispatch({ type: "SET_SELECTED_AUDIO", payload: deviceId });
+        }
+        return;
+      }
+
+      if (!mediasoup.localStream) {
+        console.warn("[Call] Cannot change device - no local stream");
         return;
       }
 
@@ -90,9 +130,10 @@ export const useCallDevices = () => {
         }
 
         mediasoup.setLocalStream(mediasoup.localStream);
+        enumerate();
       } catch (error) {
         console.error(`[Call] Error switching ${type} device:`, error);
-        alert(`Failed to switch ${type} device. Please try again.`);
+        toast.error(`Failed to switch ${type} device. Please try again.`);
       }
     },
     [
@@ -101,6 +142,7 @@ export const useCallDevices = () => {
       mediasoup.device,
       mediasoup.setLocalStream,
       dispatch,
+      enumerate,
     ]
   );
 

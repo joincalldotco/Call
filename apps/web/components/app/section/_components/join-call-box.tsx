@@ -5,13 +5,12 @@ import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-  InputOTPSeparator,
 } from "@call/ui/components/input-otp";
 import { Button } from "@call/ui/components/button";
-import { Label } from "@call/ui/components/label";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn, Link, Hash } from "lucide-react";
+import { AnimatePresence, motion as m } from "motion/react";
+import { cn } from "@call/ui/lib/utils";
 
 export function JoinCallBox() {
   const [joinMethod, setJoinMethod] = useState<"link" | "code">("link");
@@ -40,93 +39,120 @@ export function JoinCallBox() {
     (joinMethod === "code" && code.length !== 6);
 
   return (
-    <div className="bg-background mx-auto mt-8 grid max-w-2xl grid-cols-1 overflow-hidden rounded-xl border shadow-lg md:grid-cols-3">
-      {/* Left Panel: Information */}
-      <div className="bg-muted/70 col-span-1 hidden flex-col items-center justify-center border-r p-8 text-center md:flex">
-        <div className="bg-secondary/20 rounded-full p-4">
-          <LogIn className="text-secondary-foreground h-10 w-10" />
+    <div className="flex w-full items-center justify-center p-4">
+      <div className="w-full max-w-[404px] space-y-4">
+        {/* Toggle: Enter the link | Enter the code */}
+        <div className="flex w-full items-stretch gap-1.5 rounded-[10px] border border-[#282828] p-1">
+          <m.button
+            type="button"
+            onClick={() => setJoinMethod("link")}
+            className={cn(
+              "relative z-0 flex-1 rounded-[8px] px-3 py-2 text-[16px] font-medium tracking-[-0.02em] transition-all hover:bg-transparent",
+              joinMethod === "link" && "font-medium text-white hover:text-white"
+            )}
+          >
+            Enter the link
+            {joinMethod === "link" && (
+              <m.div
+                className="absolute inset-0 -z-10 rounded-[8px] bg-[#282828]"
+                layoutId="active-join-method"
+              />
+            )}
+          </m.button>
+          <m.button
+            type="button"
+            onClick={() => setJoinMethod("code")}
+            className={cn(
+              "relative z-0 flex-1 rounded-[10px] px-3 py-2 text-[16px] font-medium tracking-[-0.02em] transition-all hover:bg-transparent",
+              joinMethod === "code" && "font-medium text-white hover:text-white"
+            )}
+          >
+            Enter the code
+            {joinMethod === "code" && (
+              <m.div
+                className="absolute inset-0 -z-10 rounded-[10px] bg-[#282828]"
+                layoutId="active-join-method"
+              />
+            )}
+          </m.button>
         </div>
-        <h2 className="mt-4 text-2xl font-bold">Join a Call</h2>
-        <p className="text-muted-foreground mt-2 text-sm">
-          Enter a link or code on the right to connect.
-        </p>
-      </div>
-
-      {/* Right Panel: Interaction */}
-      <div className="col-span-1 flex flex-col justify-center p-8 md:col-span-2">
-        <div>
-          <h3 className="text-foreground text-lg font-semibold">
-            Connection Details
-          </h3>
-          <div className="mt-4 flex items-start space-x-4">
-            {/* Input Area */}
-            <div className="flex-grow space-y-3">
-              {joinMethod === "link" && (
-                <div>
-                  <Label htmlFor="call-link" className="text-muted-foreground">
-                    Link
-                  </Label>
-                  <Input
-                    id="call-link"
-                    placeholder="Paste your meeting link"
-                    className="mt-1 h-11 text-base"
-                    value={link}
-                    onChange={(e) => setLink(e.target.value)}
+        <AnimatePresence mode="popLayout">
+          {joinMethod === "code" ? (
+            <m.div
+              key="call-code-input"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex w-full items-center justify-center gap-2.5"
+              layoutId="call-code-input"
+            >
+              <InputOTP
+                id="call-code"
+                maxLength={6}
+                value={code}
+                onChange={setCode}
+              >
+                <InputOTPGroup className="flex items-center gap-2.5">
+                  {/* Slots 0,1,2 with placeholders 8 2 w when empty */}
+                  <InputOTPSlot
+                    index={0}
+                    className="relative h-14 w-14 !rounded-2xl border-0 bg-[#282828] text-[22px] font-medium text-[#EDEDED] shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_2px_rgba(199,199,199,0.25)] before:pointer-events-none before:absolute before:inset-0 before:flex before:items-center before:justify-center empty:bg-white/5 empty:text-white empty:shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_7px_rgba(199,199,199,0.25),inset_0_0_7px_rgba(199,199,199,0.25)] empty:before:text-white/60 empty:before:content-['8']"
                   />
-                </div>
-              )}
-              {joinMethod === "code" && (
-                <div>
-                  <Label htmlFor="call-code" className="text-muted-foreground">
-                    Code
-                  </Label>
-                  <InputOTP
-                    maxLength={6}
-                    value={code}
-                    onChange={setCode}
-                    id="call-code"
-                  >
-                    <InputOTPGroup className="mt-1">
-                      <InputOTPSlot index={0} className="h-11 w-11 text-base" />
-                      <InputOTPSlot index={1} className="h-11 w-11 text-base" />
-                      <InputOTPSlot index={2} className="h-11 w-11 text-base" />
-                      <InputOTPSeparator />
-                      <InputOTPSlot index={3} className="h-11 w-11 text-base" />
-                      <InputOTPSlot index={4} className="h-11 w-11 text-base" />
-                      <InputOTPSlot index={5} className="h-11 w-11 text-base" />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-              )}
-              <Button
-                className="h-11 w-full text-base font-semibold"
-                onClick={handleJoin}
-                disabled={isButtonDisabled}
-              >
-                Connect
-              </Button>
-            </div>
+                  <InputOTPSlot
+                    index={1}
+                    className="relative h-14 w-14 !rounded-2xl border-0 bg-[#282828] text-[22px] font-medium text-[#EDEDED] shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_2px_rgba(199,199,199,0.25)] before:pointer-events-none before:absolute before:inset-0 before:flex before:items-center before:justify-center empty:bg-white/5 empty:text-white empty:shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_7px_rgba(199,199,199,0.25),inset_0_0_7px_rgba(199,199,199,0.25)] empty:before:text-white/60 empty:before:content-['2']"
+                  />
+                  <InputOTPSlot
+                    index={2}
+                    className="relative h-14 w-14 !rounded-2xl border-0 bg-[#282828] text-[22px] font-medium text-[#EDEDED] shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_2px_rgba(199,199,199,0.25)] before:pointer-events-none before:absolute before:inset-0 before:flex before:items-center before:justify-center empty:bg-white/5 empty:text-white empty:shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_7px_rgba(199,199,199,0.25),inset_0_0_7px_rgba(199,199,199,0.25)] empty:before:text-white/60 empty:before:content-['w']"
+                  />
 
-            {/* Vertical Tab Switcher */}
-            <div className="flex flex-col space-y-2 border-l pl-4">
-              <Button
-                onClick={() => setJoinMethod("link")}
-                variant={joinMethod === "link" ? "secondary" : "ghost"}
-                size="icon"
-                aria-label="Join with Link"
-              >
-                <Link className="h-5 w-5" />
-              </Button>
-              <Button
-                onClick={() => setJoinMethod("code")}
-                variant={joinMethod === "code" ? "secondary" : "ghost"}
-                size="icon"
-                aria-label="Join with Code"
-              >
-                <Hash className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
+                  {/* Separator */}
+                  <div className="h-[5px] w-[18px] rounded-full bg-[#282828]" />
+
+                  {/* Slots 3,4,5 */}
+                  <InputOTPSlot
+                    index={3}
+                    className="h-14 w-14 !rounded-2xl border-0 bg-[#282828] text-[22px] font-medium text-[#EDEDED] shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_2px_rgba(199,199,199,0.25)] empty:bg-white/5 empty:text-white empty:shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_7px_rgba(199,199,199,0.25),inset_0_0_7px_rgba(199,199,199,0.25)]"
+                  />
+                  <InputOTPSlot
+                    index={4}
+                    className="h-14 w-14 !rounded-2xl border-0 bg-[#282828] text-[22px] font-medium text-[#EDEDED] shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_2px_rgba(199,199,199,0.25)] empty:bg-white/5 empty:text-white empty:shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_7px_rgba(199,199,199,0.25),inset_0_0_7px_rgba(199,199,199,0.25)]"
+                  />
+                  <InputOTPSlot
+                    index={5}
+                    className="h-14 w-14 !rounded-2xl border-0 bg-[#282828] text-[22px] font-medium text-[#EDEDED] shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_2px_rgba(199,199,199,0.25)] empty:bg-white/5 empty:text-white empty:shadow-[0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.08),0_2px_8px_-3px_rgba(0,0,0,0.25),inset_0_0_7px_rgba(199,199,199,0.25),inset_0_0_7px_rgba(199,199,199,0.25)]"
+                  />
+                </InputOTPGroup>
+              </InputOTP>
+            </m.div>
+          ) : (
+            <m.div
+              key="call-link-input"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex w-full items-center justify-center"
+            >
+              <Input
+                id="call-link"
+                placeholder="Paste your meeting link"
+                className="h-14 w-full rounded-2xl bg-white/5 px-5 text-base text-white placeholder:text-white/60"
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+              />
+            </m.div>
+          )}
+        </AnimatePresence>
+
+        <div className="w-full">
+          <Button
+            className="h-14 w-full cursor-pointer rounded-2xl bg-[#282828] text-lg font-medium tracking-[-0.02em] text-white shadow-[inset_0_0_2px_rgba(199,199,199,0.25)] transition-shadow hover:bg-[#282828] hover:text-white hover:shadow-[inset_0_0_7px_rgba(199,199,199,0.25)]"
+            onClick={handleJoin}
+            disabled={isButtonDisabled}
+          >
+            Join now
+          </Button>
         </div>
       </div>
     </div>

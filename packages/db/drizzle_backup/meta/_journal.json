@@ -8,6 +8,13 @@
       "when": 1754355026705,
       "tag": "0000_steep_blindfold",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1754842607995,
+      "tag": "0001_lazy_talkback",
+      "breakpoints": true
     }
   ]
 }

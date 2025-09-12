@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { supabase } from "@/lib/supabase";
+import { waitlistService } from "@/lib/waitlist";
 
 const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -22,38 +22,12 @@ export async function POST(request: NextRequest) {
     const { email } = result.data;
     const emailNormalized = email.toLowerCase().trim();
 
+    const { error } = await waitlistService.addEmail(emailNormalized);
 
-    const { data: existing, error: selectError } = await supabase
-      .from("waitlist")
-      .select("id")
-      .eq("email", emailNormalized)
-      .maybeSingle();
-
-    if (selectError) {
-      console.error("Error checking existing email:", selectError);
+    if (error) {
       return NextResponse.json(
-        { success: false, error: "Internal server error" },
-        { status: 500 }
-      );
-    }
-
-    if (existing) {
-      return NextResponse.json(
-        { success: false, error: "This email is already on the waitlist" },
+        { success: false, error },
         { status: 400 }
-      );
-    }
-
-  
-    const { error: insertError } = await supabase
-      .from("waitlist")
-      .insert({ email: emailNormalized });
-
-    if (insertError) {
-      console.error("Error inserting email:", insertError);
-      return NextResponse.json(
-        { success: false, error: "Internal server error" },
-        { status: 500 }
       );
     }
 

@@ -11,9 +11,7 @@
     "FRONTEND_URL",
     "BACKEND_URL",
     "RESEND_API_KEY",
-    "EMAIL_FROM",
-    "SUPABASE_URL",
-    "SUPABASE_ANON_KEY"
+    "EMAIL_FROM"
   ],
   "tasks": {
     "build": {
@@ -33,7 +31,9 @@
     },
     "start": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"]
     },
     "db:generate": {
       "cache": false

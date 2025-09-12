@@ -1,3 +1,5 @@
+"use client";
+
 import { useModal } from "@/hooks/use-modal";
 import { TEAMS_QUERY } from "@/lib/QUERIES";
 import {
@@ -22,7 +24,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ContactSelector } from "./contact-selector";
+import { ContactsSelector } from "./contacts-selector";
 
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }).trim(),
@@ -106,29 +108,36 @@ export const CreateTeam = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleModalClose}>
-      <DialogContent>
-        <DialogHeader className="flex flex-col items-center">
+      <DialogContent
+        className="!max-w-sm rounded-2xl bg-[#232323] p-6"
+        showCloseButton={false}
+      >
+        <DialogHeader className="flex flex-col">
           <DialogTitle>Create Team</DialogTitle>
           <DialogDescription>
             Create a new team with your contacts.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input {...field} placeholder="Enter team name" />
+                    <Input
+                      {...field}
+                      placeholder="Team name"
+                      className="border-1 h-12 !rounded-lg border-[#434343] bg-[#2F2F2F] text-2xl text-white"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <ContactSelector
+            <ContactsSelector
               selectedContacts={selectedContacts}
               onContactsChange={setSelectedContacts}
               disabled={isPending}
@@ -136,7 +145,7 @@ export const CreateTeam = () => {
 
             <LoadingButton
               type="submit"
-              className="w-full"
+              className="h-10 w-full rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-900 hover:bg-gray-50"
               loading={isPending}
               disabled={isPending || !form.formState.isValid}
             >

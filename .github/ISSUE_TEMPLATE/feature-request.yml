@@ -1,5 +1,5 @@
 name: Feature Request
-description: Suggest a new feature or improvement for analog.now
+description: Suggest a new feature or improvement for joincall.co
 labels: ["feature"]
 body:
   - type: markdown

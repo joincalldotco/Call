@@ -5,8 +5,11 @@ import { contactRequests, contacts, user as userTable } from "@call/db/schema";
 import { createId } from "@paralleldrive/cuid2";
 import { and, eq, or } from "drizzle-orm";
 import type { ReqVariables } from "../../index.js";
+
 import { sendMail } from "@call/auth/utils/send-mail";
 import { cache } from "@/lib/cache";
+
+import { env } from "@/config/env";
 
 const contactsRoutes = new Hono<{ Variables: ReqVariables }>();
 
@@ -47,11 +50,22 @@ contactsRoutes.post("/invite", async (c) => {
       .where(eq(userTable.email, receiverEmail));
 
     if (!receiver) {
-      await sendMail({
+      const mailResult = await sendMail({
         to: receiverEmail,
         subject: "Invitation to join Call",
-        text: `You are invited to join Call by ${user.name} here is the link ${process.env.FRONTEND_URL}/login`,
+        text: `You are invited to join Call by ${user.name} here is the link ${env.FRONTEND_URL}/login`,
       });
+      if (!mailResult.success) {
+        console.error("Error sending email:", mailResult.error);
+        return c.json(
+          {
+            success: false,
+            message: "Failed to send email.",
+            error: mailResult.error,
+          },
+          500
+        );
+      }
       return c.json(
         { message: "Email sent to receiver to invite them to the app." },
         200

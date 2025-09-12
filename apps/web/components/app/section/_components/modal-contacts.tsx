@@ -8,7 +8,7 @@ import { Label } from "@call/ui/components/label";
 import { useSession } from "@/hooks/useSession";
 import { useState } from "react";
 
-export function ModalContact({ onClose }: { onClose?: () => void }) {
+export function ModalContacts({ onClose }: { onClose?: () => void }) {
   const { session } = useSession();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,16 +28,18 @@ export function ModalContact({ onClose }: { onClose?: () => void }) {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contacts/invite`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Authorization: `Bearer ${session.session.token}`,
-        },
-        credentials: "include",
-        body: JSON.stringify({ receiverEmail: email })
-        
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contacts/invite`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // Authorization: `Bearer ${session.session.token}`,
+          },
+          credentials: "include",
+          body: JSON.stringify({ receiverEmail: email }),
+        }
+      );
       const data = await res.json();
       if (!res.ok) {
         setError(data?.message || "error to send invi/req");
@@ -55,7 +57,7 @@ export function ModalContact({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <Card className="w-full w-lg">
+    <Card className="w-lg w-full">
       <CardContent>
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-6">
@@ -67,18 +69,28 @@ export function ModalContact({ onClose }: { onClose?: () => void }) {
                 placeholder="m@example.com"
                 required
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 disabled={loading || success}
               />
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
-            {success && <div className="text-green-600 text-sm">sent!! 🎉</div>}
+            {error && <div className="text-sm text-red-500">{error}</div>}
+            {success && <div className="text-sm text-green-600">sent!! 🎉</div>}
           </div>
-          <CardFooter className="flex-col gap-2 mt-6">
-            <Button type="submit" className="w-full" disabled={loading || success}>
+          <CardFooter className="mt-6 flex-col gap-2">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || success}
+            >
               {loading ? "sending..." : success ? "sent" : "send"}
             </Button>
-            <Button variant="outline" className="w-full" onClick={onClose} type="button" disabled={loading}>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={onClose}
+              type="button"
+              disabled={loading}
+            >
               Close
             </Button>
           </CardFooter>

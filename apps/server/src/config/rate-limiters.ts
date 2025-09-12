@@ -8,3 +8,6 @@ export const waitlistRateLimiter = new RateLimiterRedis({
   blockDuration: 60 * 60,
   keyPrefix: "rl:waitlist",
 });
+
+// Rate limiters configuration
+// Note: Waitlist rate limiting is now handled in-memory on the web app side

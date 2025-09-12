@@ -8,6 +8,8 @@ import { cn } from "@call/ui/lib/utils";
 import { motion as m } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import { CloseSidebarButton } from "@/components/app/section/_components/close-sidebar-button";
+import { Icons } from "@call/ui/components/icons";
 
 const SECTIONS = [
   { key: "joincall", label: "Join Call" },
@@ -36,26 +38,27 @@ export default function CallPage() {
   );
 
   return (
-    <div className="flex flex-col gap-[22px]">
+    <div className="flex min-h-screen flex-col">
       <Header className="justify-between">
         <div className="flex items-center gap-2">
+          <CloseSidebarButton className="-ml-8" />
           {SECTIONS.map((s) => (
             <m.button
               key={s.key}
               onClick={() => handleSectionChange(s.key)}
               className={cn(
                 buttonVariants({ variant: "ghost" }),
-                "relative z-0 transition-all hover:bg-transparent",
+                "relative z-0 text-sm text-[#4C4C4C] transition-all hover:bg-transparent",
                 sectionKey === s.key &&
-                  "font-medium text-white hover:text-white"
+                  "cursor-pointer rounded-md px-4 py-2 font-medium text-white hover:text-white"
               )}
             >
               {s.label}
-
               {sectionKey === s.key && (
                 <m.div
                   className="bg-inset-accent-foreground absolute inset-0 -z-10 rounded-md"
                   layoutId="active-call-section"
+                  transition={{ layout: { duration: 0.15, ease: "easeOut" } }}
                 />
               )}
             </m.button>
@@ -63,12 +66,15 @@ export default function CallPage() {
         </div>
         <Button
           onClick={() => onOpen("start-call")}
-          className="bg-inset-accent-foreground hover:bg-inset-accent-foreground/80 text-white"
+          className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50"
         >
+          <Icons.plus style={{ width: 14, height: 14 }} />
           Start Call
         </Button>
       </Header>
-      <CallSection section={sectionKey} />
+      <div className="flex-1">
+        <CallSection section={sectionKey} />
+      </div>
     </div>
   );
 }

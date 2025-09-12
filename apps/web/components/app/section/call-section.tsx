@@ -9,12 +9,22 @@ interface CallSectionProps {
 
 const CallSection = ({ section }: CallSectionProps) => {
   const Sections = {
-    joincall: <JoinCallBox />,
-    history: <CallHistory />,
+    joincall: (
+      <div className="flex h-full w-full items-center justify-center">
+        <JoinCallBox />
+      </div>
+    ),
+    history: (
+      <div className="h-full w-full pb-6">
+        <CallHistory />
+      </div>
+    ),
   };
 
   return (
-    <div className="px-10">{Sections[section as keyof typeof Sections]}</div>
+    <div className="h-full w-full px-10">
+      {Sections[section as keyof typeof Sections]}
+    </div>
   );
 };
 

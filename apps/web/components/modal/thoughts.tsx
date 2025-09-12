@@ -1,8 +1,11 @@
+"use client";
+
 import { useModal } from "@/hooks/use-modal";
 import { THOUGHTS_QUERY } from "@/lib/QUERIES";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@call/ui/components/dialog";
@@ -73,12 +76,19 @@ export const Thoughts = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent
+        className="!max-w-md rounded-2xl bg-[#232323] p-6"
+        showCloseButton={false}
+      >
+        <DialogHeader className="flex flex-col">
           <DialogTitle>Thoughts?</DialogTitle>
+          <DialogDescription>
+            We&apos;re always looking for ways to improve. Let us know what you
+            think.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="type"
@@ -89,7 +99,7 @@ export const Thoughts = () => {
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="border-1 h-12 w-full !rounded-lg border-[#434343] bg-[#2F2F2F] text-white">
                         <SelectValue placeholder="Select a type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -114,7 +124,7 @@ export const Thoughts = () => {
                     <Textarea
                       {...field}
                       placeholder="What can we do better?"
-                      className="h-40 resize-none"
+                      className="border-1 h-40 resize-none !rounded-lg border-[#434343] bg-[#2F2F2F] text-base text-white"
                     />
                   </FormControl>
                   <FormMessage />
@@ -123,7 +133,7 @@ export const Thoughts = () => {
             />
             <LoadingButton
               type="submit"
-              className="w-full"
+              className="h-10 w-full rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-900 hover:bg-gray-50"
               loading={isPending}
               disabled={isPending || !form.formState.isValid}
             >

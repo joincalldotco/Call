@@ -2,8 +2,6 @@ import { db } from "@call/db";
 import schema from "@call/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { extractTokenFromUrl } from "./utils/extract-token";
-import { sendMail } from "./utils/send-mail";
 
 if (!process.env.FRONTEND_URL || !process.env.BACKEND_URL) {
   throw new Error(
@@ -36,21 +34,7 @@ export const auth = betterAuth({
   ],
 
   emailAndPassword: {
-    enabled: true,
-    autoSignIn: true,
-    minPasswordLength: 8,
-    maxPasswordLength: 100,
-    resetPasswordTokenExpiresIn: 600, // 10 minutes
-    sendResetPassword: async ({ user, url }) => {
-      const token = extractTokenFromUrl(url);
-      const frontendResetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-
-      await sendMail({
-        to: user.email,
-        subject: "Reset your password",
-        text: `Click the link to reset your password: ${frontendResetUrl}`,
-      });
-    },
+    enabled: false,
   },
 
   socialProviders: {
@@ -65,11 +49,17 @@ export const auth = betterAuth({
       prompt: "consent",
     },
   },
+
+ 
+
   advanced: {
     crossSubDomainCookies: {
       enabled: process.env.NODE_ENV === "production",
       domain: "joincall.co",
     },
+  },
+  verification: {
+    disableCleanup: true,
   },
 });
 

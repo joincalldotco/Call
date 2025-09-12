@@ -1,16 +1,60 @@
 "use client";
 
-import { type PropsWithChildren, createContext, useContext } from "react";
+import {
+  type PropsWithChildren,
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
 import { type Session } from "@call/auth/auth";
 
-export const SessionContext = createContext<Session | null>(null);
+type SessionContextType = Session & {
+  isGuest: boolean;
+};
+
+export const SessionContext = createContext<SessionContextType | null>(null);
 
 export const SessionProvider = ({
   children,
   value,
-}: PropsWithChildren<{ value: Session }>) => {
+}: PropsWithChildren<{ value?: Session }>) => {
+  const [session, setSession] = useState<SessionContextType | null>(null);
+
+  useEffect(() => {
+    const sessionData: Session = value || {
+      user: {
+        id: "guest",
+        name: "Guest",
+        email: "guest@example.com",
+        emailVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      session: {
+        id: "guest",
+        token: "guest",
+        userId: "guest",
+        expiresAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    };
+
+    setSession({
+      ...sessionData,
+      isGuest: !value,
+    });
+  }, [value]);
+
+  if (!session) {
+    return null;
+  }
+
   return (
-    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
+    <SessionContext.Provider value={session}>
+      {children}
+    </SessionContext.Provider>
   );
 };
 

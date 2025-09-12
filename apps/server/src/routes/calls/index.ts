@@ -8,14 +8,12 @@ import {
   user as userTable,
   callParticipants,
   callJoinRequests,
+  hiddenCalls,
 } from "@call/db/schema";
-import { eq, inArray, desc, and } from "drizzle-orm";
+import { eq, inArray, desc, and, sql } from "drizzle-orm";
 import type { ReqVariables } from "../../index.js";
-
-import { cache } from "@/lib/cache";
-
-import { sendMail } from '@call/auth/utils/send-mail';
-
+import { sendMail } from "@call/auth/utils/send-mail";
+import { cache } from "../../lib/cache.js";
 
 const callsRoutes = new Hono<{ Variables: ReqVariables }>();
 
@@ -37,7 +35,6 @@ function generateCallCode() {
 callsRoutes.post("/create", async (c) => {
   console.log("🔍 [CALLS DEBUG] POST /create called");
 
-  // Get authenticated user (like teams does)
   const user = c.get("user");
   console.log("👤 [CALLS DEBUG] User:", { id: user?.id, email: user?.email });
 
@@ -140,13 +137,20 @@ callsRoutes.post("/create", async (c) => {
           createdAt: new Date(),
         });
         console.log(`✅ [CALLS DEBUG] Notification created for ${email}`);
-        
-        await sendMail({
+
+        const mailResult = await sendMail({
           to: email,
           subject: "Invitation to join Call",
           text: `Hello,\n\n${user.name || user.email} is inviting you to a call: ${name}\n\nJoin the call: ${process.env.FRONTEND_URL}/calls/${callId}`,
         });
-        console.log(`✅ [CALLS DEBUG] Email sent to ${email}`);
+        if (!mailResult.success) {
+          console.error(
+            `⚠️ [CALLS DEBUG] Failed to send email to ${email}:`,
+            mailResult.error
+          );
+        } else {
+          console.log(`✅ [CALLS DEBUG] Email sent to ${email}`);
+        }
       }
     }
     console.log("✅ [CALLS DEBUG] All invitations and notifications created");
@@ -237,7 +241,19 @@ callsRoutes.get("/participated", async (c) => {
       })
       .from(callParticipants)
       .innerJoin(calls, eq(callParticipants.callId, calls.id))
-      .where(eq(callParticipants.userId, user.id as string))
+      .leftJoin(
+        hiddenCalls,
+        and(
+          eq(hiddenCalls.callId, calls.id),
+          eq(hiddenCalls.userId, user.id as string)
+        )
+      )
+      .where(
+        and(
+          eq(callParticipants.userId, user.id as string),
+          sql`${hiddenCalls.id} IS NULL` // Only show calls that are not hidden
+        )
+      )
       .orderBy(desc(callParticipants.joinedAt));
 
     // Get participants for each call
@@ -469,7 +485,6 @@ callsRoutes.post("/:id/request-join", async (c) => {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // Check if call exists
     const callResult = await db
       .select({ creatorId: calls.creatorId })
       .from(calls)
@@ -480,7 +495,6 @@ callsRoutes.post("/:id/request-join", async (c) => {
       return c.json({ error: "Call not found" }, 404);
     }
 
-    // Check if user already has a pending request
     const existingRequest = await db
       .select()
       .from(callJoinRequests)
@@ -497,7 +511,6 @@ callsRoutes.post("/:id/request-join", async (c) => {
       return c.json({ error: "You already have a pending request" }, 400);
     }
 
-    // Create join request
     await db.insert(callJoinRequests).values({
       callId,
       requesterId: user.id,
@@ -522,7 +535,6 @@ callsRoutes.get("/:id/join-requests", async (c) => {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // Check if user is the creator
     const callResult = await db
       .select({ creatorId: calls.creatorId })
       .from(calls)
@@ -538,7 +550,6 @@ callsRoutes.get("/:id/join-requests", async (c) => {
       return c.json({ error: "Only call creator can view join requests" }, 403);
     }
 
-    // Get join requests with user information
     const requests = await db
       .select({
         id: callJoinRequests.id,
@@ -564,6 +575,22 @@ callsRoutes.get("/:id/join-requests", async (c) => {
   }
 });
 
+callsRoutes.get("/:id", async (c) => {
+  const callId = c.req.param("id");
+
+  console.log(`[GET-CALL] Getting call ${callId}`);
+
+  const call = await db.query.calls.findFirst({
+    where: eq(calls.id, callId),
+  });
+
+  if (!call) {
+    return c.json({ error: "Call not found" }, 404);
+  }
+
+  return c.json({ call });
+});
+
 // POST /api/calls/:id/approve-join
 callsRoutes.post("/:id/approve-join", async (c) => {
   try {
@@ -576,7 +603,6 @@ callsRoutes.post("/:id/approve-join", async (c) => {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // Check if user is the creator
     const callResult = await db
       .select({ creatorId: calls.creatorId })
       .from(calls)
@@ -693,9 +719,6 @@ callsRoutes.delete("/participated/:callId", async (c) => {
 
     console.log(`[DELETE-CALL-PARTICIPATION] Delete result:`, result);
 
-    // Invalidate user's calls cache
-    await cache.del(cache.getUserCallsKey(user.id));
-
     return c.json({
       success: true,
       message: "Call participation deleted successfully",
@@ -723,9 +746,6 @@ callsRoutes.delete("/participated", async (c) => {
 
     console.log(`[DELETE-HISTORY] Delete result:`, result);
 
-    // Invalidate user's calls cache
-    await cache.del(cache.getUserCallsKey(user.id));
-
     return c.json({
       success: true,
       message: "Call history deleted successfully",
@@ -733,6 +753,192 @@ callsRoutes.delete("/participated", async (c) => {
   } catch (error) {
     console.error("Error deleting call history:", error);
     return c.json({ error: "Failed to delete call history" }, 500);
+  }
+});
+
+// GET /api/calls/:id/participants
+callsRoutes.get("/:id/participants", async (c) => {
+  try {
+    const user = c.get("user");
+    if (!user || !user.id) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const callId = c.req.param("id");
+    if (!callId) {
+      return c.json({ error: "Call ID is required" }, 400);
+    }
+
+    // Check if the user is a participant in the call
+    const participation = await db
+      .select()
+      .from(callParticipants)
+      .where(
+        and(
+          eq(callParticipants.callId, callId),
+          eq(callParticipants.userId, user.id as string)
+        )
+      )
+      .limit(1);
+
+    if (!participation || participation.length === 0) {
+      return c.json({ error: "Call not found or user not a participant" }, 404);
+    }
+
+    // Get all participants for this call with their profile information
+    const participants = await db
+      .select({
+        id: userTable.id,
+        name: userTable.name,
+        email: userTable.email,
+        image: userTable.image,
+        joinedAt: callParticipants.joinedAt,
+        leftAt: callParticipants.leftAt,
+      })
+      .from(callParticipants)
+      .innerJoin(userTable, eq(callParticipants.userId, userTable.id))
+      .where(eq(callParticipants.callId, callId));
+
+    // Get call creator info
+    const creatorResult = await db
+      .select({
+        creatorId: calls.creatorId,
+        creatorName: userTable.name,
+        creatorEmail: userTable.email,
+        creatorImage: userTable.image,
+      })
+      .from(calls)
+      .innerJoin(userTable, eq(calls.creatorId, userTable.id))
+      .where(eq(calls.id, callId))
+      .limit(1);
+
+    if (!creatorResult || creatorResult.length === 0) {
+      return c.json({ error: "Call not found" }, 404);
+    }
+
+    const creator = creatorResult[0];
+    if (!creator) {
+      return c.json({ error: "Call creator not found" }, 404);
+    }
+
+    // Add creator to participants list if not already present
+    const allParticipants = participants.map((participant) => ({
+      ...participant,
+      isCreator: participant.id === creator.creatorId,
+    }));
+
+    // If creator is not in participants list, add them
+    if (!allParticipants.find((p) => p.id === creator.creatorId)) {
+      allParticipants.push({
+        id: creator.creatorId,
+        name: creator.creatorName,
+        email: creator.creatorEmail,
+        image: creator.creatorImage,
+        joinedAt: new Date(),
+        leftAt: null,
+        isCreator: true,
+      });
+    }
+
+    return c.json({ participants: allParticipants });
+  } catch (error) {
+    console.error("Error getting call participants:", error);
+    return c.json({ error: "Failed to get participants info" }, 500);
+  }
+});
+
+// POST /api/calls/:id/invite
+callsRoutes.post("/:id/invite", async (c) => {
+  try {
+    const user = c.get("user");
+    if (!user || !user.id) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const callId = c.req.param("id");
+    if (!callId) {
+      return c.json({ error: "Call ID is required" }, 400);
+    }
+
+    const body = await c.req.json();
+    const { email } = body;
+
+    if (!email) {
+      return c.json({ error: "Email is required" }, 400);
+    }
+
+    // Check if the user is the creator of the call
+    const call = await db
+      .select()
+      .from(calls)
+      .where(eq(calls.id, callId))
+      .limit(1);
+
+    if (!call || call.length === 0) {
+      return c.json({ error: "Call not found" }, 404);
+    }
+
+    const callData = call[0];
+    if (!callData) {
+      return c.json({ error: "Call not found" }, 404);
+    }
+
+    if (callData.creatorId !== user.id) {
+      return c.json({ error: "Only the call creator can invite users" }, 403);
+    }
+
+    // Find the user to invite
+    const userToInvite = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.email, email))
+      .limit(1);
+
+    if (!userToInvite || userToInvite.length === 0) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    const invitee = userToInvite[0];
+    if (!invitee) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    // Check if user is already a participant
+    const existingParticipation = await db
+      .select()
+      .from(callParticipants)
+      .where(
+        and(
+          eq(callParticipants.callId, callId),
+          eq(callParticipants.userId, invitee.id)
+        )
+      )
+      .limit(1);
+
+    if (existingParticipation.length > 0) {
+      return c.json({ error: "User is already a participant" }, 400);
+    }
+
+    // Create invitation
+    await db.insert(callInvitations).values({
+      callId,
+      inviteeId: invitee.id,
+      inviteeEmail: email,
+      status: "pending",
+    });
+
+    // Send notification to the invited user
+    await db.insert(notifications).values({
+      userId: invitee.id,
+      type: "call",
+      message: `${user.name || user.email} invited you to join a call`,
+      callId,
+    });
+
+    return c.json({ success: true, message: "Invitation sent successfully" });
+  } catch (error) {
+    console.error("Error sending call invitation:", error);
+    return c.json({ error: "Failed to send invitation" }, 500);
   }
 });
 
@@ -761,6 +967,58 @@ callsRoutes.get("/:id/creator", async (c) => {
   } catch (error) {
     console.error("Error getting call creator:", error);
     return c.json({ error: "Failed to get creator info" }, 500);
+  }
+});
+
+// POST /api/calls/:id/hide
+callsRoutes.post("/:id/hide", async (c) => {
+  try {
+    const user = c.get("user");
+    if (!user || !user.id) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const callId = c.req.param("id");
+    if (!callId) {
+      return c.json({ error: "Call ID is required" }, 400);
+    }
+
+    // Check if the user is a participant in the call
+    const participation = await db
+      .select()
+      .from(callParticipants)
+      .where(
+        and(
+          eq(callParticipants.callId, callId),
+          eq(callParticipants.userId, user.id as string)
+        )
+      )
+      .limit(1);
+
+    if (!participation || participation.length === 0) {
+      return c.json({ error: "Call not found or user not a participant" }, 404);
+    }
+
+    // Hide the call for this user
+    await db.insert(hiddenCalls).values({
+      callId,
+      userId: user.id as string,
+    });
+
+    return c.json({ success: true, message: "Call hidden successfully" });
+  } catch (error: unknown) {
+    console.error("Error hiding call:", error);
+    // If the error is due to the call already being hidden, return success
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "23505"
+    ) {
+      // PostgreSQL unique violation error code
+      return c.json({ success: true, message: "Call already hidden" });
+    }
+    return c.json({ error: "Failed to hide call" }, 500);
   }
 });
 

@@ -2,10 +2,7 @@ import * as mediasoup from "mediasoup";
 import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import os from "os";
-import { config } from "dotenv";
-import { resolve } from "path";
-
-config({ path: resolve(process.cwd(), "../../.env") });
+import { env } from "@/config/env";
 
 // --- Types -----
 type Consumer = mediasoup.types.Consumer;
@@ -50,6 +47,7 @@ export type MyConsumer = {
 export type MyPeer = {
   id: string;
   displayName: string;
+  userImage?: string;
   device: any;
   ws: WebSocket;
   connectionState: "new" | "connecting" | "connected" | "disconnected";
@@ -79,6 +77,9 @@ const peerSocketMap = new Map<WebSocket, string>(); // WebSocket -> peerId
 const peerRoomMap = new Map<string, string>(); // peerId -> roomId
 const workers: Worker[] = [];
 let nextWorkerIdx = 0;
+
+// Track pending join requests by composite key roomId:peerId
+const pendingJoinRequests = new Map<string, WebSocket>();
 
 // basic configuration for mediasoup
 const mediasoupConfig = {
@@ -113,7 +114,7 @@ const mediasoupConfig = {
   },
   webRtcTransport: {
     listenIps: [
-      { ip: "0.0.0.0", announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP },
+  { ip: "0.0.0.0", announcedIp: env.MEDIASOUP_ANNOUNCED_IP },
     ],
     enableUdp: true,
     enableTcp: true,
@@ -214,7 +215,8 @@ async function createPeer(
   roomId: string,
   peerId: string,
   displayName: string,
-  ws: WebSocket
+  ws: WebSocket,
+  userImage?: string
 ): Promise<MyPeer> {
   const room = await createRoom(roomId);
 
@@ -223,6 +225,7 @@ async function createPeer(
   const peer: MyPeer = {
     id: peerId,
     displayName,
+    userImage,
     device: null,
     ws,
     connectionState: "new",
@@ -353,10 +356,10 @@ wss.on("connection", (ws: WebSocket) => {
         }
 
         case "joinRoom": {
-          const { roomId, peerId, displayName = "Anonymous" } = data;
+          const { roomId, peerId, displayName = "Anonymous", userImage } = data;
 
           const room = await createRoom(roomId);
-          const peer = await createPeer(roomId, peerId, displayName, ws);
+          const peer = await createPeer(roomId, peerId, displayName, ws, userImage);
 
           peer.connectionState = "connecting";
 
@@ -368,6 +371,7 @@ wss.on("connection", (ws: WebSocket) => {
               kind: mediasoup.types.MediaKind;
               source: ProducerSource;
               displayName: string;
+              userImage?: string;
               muted: boolean;
             }>
           >((acc, otherPeer) => {
@@ -379,6 +383,7 @@ wss.on("connection", (ws: WebSocket) => {
                   kind: myProducer.producer.kind,
                   source: myProducer.source,
                   displayName: otherPeer.displayName,
+                  userImage: otherPeer.userImage,
                   muted: myProducer.muted || false,
                 });
               });
@@ -475,6 +480,127 @@ wss.on("connection", (ws: WebSocket) => {
               sctpParameters: transport.sctpParameters,
             })
           );
+          break;
+        }
+
+        case "requestJoin": {
+          const peer = getPeerFromSocket(ws);
+          const providedRoomId = data.roomId as string | undefined;
+          const providedPeerId = data.peerId as string | undefined;
+          const providedDisplayName = data.displayName as string | undefined;
+          const requesterId = data.requesterId as string | undefined;
+          if (!peer && !providedRoomId) {
+            ws.send(
+              JSON.stringify({
+                reqId: data.reqId,
+                error: "Peer or roomId not provided",
+              })
+            );
+            return;
+          }
+
+          const roomId = peer ? peerRoomMap.get(peer.id) : providedRoomId;
+          const room = getRoom(roomId!);
+          if (!room) {
+            ws.send(
+              JSON.stringify({
+                reqId: data.reqId,
+                error: "Room not found",
+              })
+            );
+            return;
+          }
+
+          const requesterPeerId = peer?.id || providedPeerId || "unknown";
+          const requesterDisplayName =
+            peer?.displayName || providedDisplayName || "Anonymous";
+
+          if (roomId && requesterPeerId) {
+            pendingJoinRequests.set(`${roomId}:${requesterPeerId}`, ws);
+          }
+
+          Object.values(room.peers).forEach((otherPeer) => {
+            if (
+              otherPeer.id !== requesterPeerId &&
+              otherPeer.ws.readyState === WebSocket.OPEN
+            ) {
+              otherPeer.ws.send(
+                JSON.stringify({
+                  type: "requestJoinResponse",
+                  reqId: data.reqId,
+                  peerId: requesterPeerId,
+                  displayName: requesterDisplayName,
+                  roomId: roomId,
+                  requesterId: requesterId,
+                })
+              );
+            }
+          });
+
+          // Optional ack to requester
+          ws.send(
+            JSON.stringify({
+              reqId: data.reqId,
+              type: "requestJoinAck",
+              success: true,
+            })
+          );
+          break;
+        }
+
+        case "acceptJoin": {
+          const { roomId, peerId } = data as {
+            roomId?: string;
+            peerId?: string;
+          };
+          if (!roomId || !peerId) {
+            ws.send(
+              JSON.stringify({
+                reqId: data.reqId,
+                error: "roomId and peerId are required",
+              })
+            );
+            return;
+          }
+          const key = `${roomId}:${peerId}`;
+          const requesterWs = pendingJoinRequests.get(key);
+          if (requesterWs && requesterWs.readyState === WebSocket.OPEN) {
+            requesterWs.send(
+              JSON.stringify({
+                type: "joinApproved",
+                roomId,
+              })
+            );
+            pendingJoinRequests.delete(key);
+          }
+          break;
+        }
+
+        case "rejectJoin": {
+          const { roomId, peerId } = data as {
+            roomId?: string;
+            peerId?: string;
+          };
+          if (!roomId || !peerId) {
+            ws.send(
+              JSON.stringify({
+                reqId: data.reqId,
+                error: "roomId and peerId are required",
+              })
+            );
+            return;
+          }
+          const key = `${roomId}:${peerId}`;
+          const requesterWs = pendingJoinRequests.get(key);
+          if (requesterWs && requesterWs.readyState === WebSocket.OPEN) {
+            requesterWs.send(
+              JSON.stringify({
+                type: "joinRejected",
+                roomId,
+              })
+            );
+            pendingJoinRequests.delete(key);
+          }
           break;
         }
 
@@ -617,6 +743,7 @@ wss.on("connection", (ws: WebSocket) => {
             kind: producer.kind,
             source: myProducer.source,
             displayName: peer.displayName,
+            userImage: peer.userImage,
             muted: myProducer.muted || false,
           };
 
@@ -714,7 +841,7 @@ wss.on("connection", (ws: WebSocket) => {
             const consumer = await peer.recvTransport.consume({
               producerId: myProducer.producer.id,
               rtpCapabilities: data.rtpCapabilities,
-              paused: false,
+              paused: false, // Always create unpaused, let client handle muted state
             });
 
             const myConsumer: MyConsumer = {
@@ -754,6 +881,7 @@ wss.on("connection", (ws: WebSocket) => {
               rtpParameters: consumer.rtpParameters,
               peerId: targetPeer.id,
               displayName: targetPeer.displayName,
+              userImage: targetPeer.userImage,
               source: myProducer.source,
               muted: myProducer.muted || false,
             };
@@ -846,6 +974,8 @@ wss.on("connection", (ws: WebSocket) => {
                     peerId: peer.id,
                     producerId,
                     muted,
+                    displayName: peer.displayName,
+                    userImage: peer.userImage,
                   })
                 );
                 notifiedCount++;

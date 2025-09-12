@@ -6,7 +6,7 @@ export type User = InferSelectModel<typeof schema.user>;
 export type Session = InferSelectModel<typeof schema.session>;
 export type Account = InferSelectModel<typeof schema.account>;
 export type Verification = InferSelectModel<typeof schema.verification>;
-export type Waitlist = InferSelectModel<typeof schema.waitlist>;
+
 export type RateLimitAttempts = InferSelectModel<
   typeof schema.rateLimitAttempts
 >;

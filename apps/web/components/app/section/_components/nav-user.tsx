@@ -43,8 +43,19 @@ export function NavUser({
     avatar: string;
   };
 }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, state } = useSidebar();
   const router = useRouter();
+
+  function getInitials(name?: string) {
+    if (!name) return "";
+    return name
+      .trim()
+      .split(/\s+/)
+      .map((word) => word[0]?.toUpperCase())
+      .join("")
+      .slice(0, 2);
+  }
+
   const handleSignOut = async () => {
     await authClient.signOut();
     router.push("/login");
@@ -55,21 +66,26 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
-              size="xl"
-              className="data-[state=open]:text-sidebar-accent-foreground data-[state=collapsed]:p-0"
+              size="lg"
+              className="data-[state=open]:text-sidebar-accent-foreground data-[state=collapsed]:p-0 hover:bg-white/5"
             >
-              <UserProfile name={user.name} url={user.avatar} />
+              <UserProfile
+                className="rounded-lg"
+                name={user.name}
+                url={user.avatar}
+                size={state === "collapsed" ? "lg" : "sm"}
+              />
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate text-lg font-medium capitalize">
+                <span className="truncate text-sm font-medium capitalize">
                   {user.name}
                 </span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ml-auto" size="sm" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg border-1 border-[#434343] bg-[#2F2F2F] p-1 shadow-xl"
+            side="bottom"
             align="end"
             sideOffset={4}
           >
@@ -77,7 +93,9 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
@@ -85,21 +103,18 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
-      
-         
+
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/app/profile")}>
+              <DropdownMenuItem className="rounded-md hover:bg-white/5" onClick={() => router.push("/app/profile")}>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
-           
-          
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleSignOut}
-              className="cursor pointer"
+              className="cursor pointer rounded-md text-[#ff6347] hover:text-[#ff6347]/80 hover:bg-white/5"
             >
               <LogOut />
               Log out

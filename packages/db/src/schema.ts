@@ -70,14 +70,7 @@ export const verification = pgTable("verification", {
   ),
 });
 
-// Waitlist Schema
-export const waitlist = pgTable("waitlist", {
-  id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  createdAt: timestamp("created_at")
-    .$defaultFn(() => new Date())
-    .notNull(),
-});
+
 
 // Rate Limiting Schema
 export const rateLimitAttempts = pgTable("rate_limit_attempts", {
@@ -338,7 +331,6 @@ const schema = {
   session,
   account,
   verification,
-  waitlist,
   rateLimitAttempts,
   room,
   contactRequests,

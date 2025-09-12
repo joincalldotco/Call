@@ -1,26 +1,37 @@
 "use client";
 
 import { authClient } from "@call/auth/auth-client";
-import { Button } from "@call/ui/components/button";
+import { LoadingButton } from "@call/ui/components/loading-button";
 import { Icons } from "@call/ui/components/icons";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const SocialButton = () => {
-  const handleGoogleLogin = async () =>
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: process.env.NEXT_PUBLIC_CALLBACK_URL,
-    });
+  const [isLoading, setIsLoading] = useState(false);
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: process.env.NEXT_PUBLIC_CALLBACK_URL,
+      });
+    } catch (error) {
+      toast.error("Failed to sign in with Google");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <Button
+    <LoadingButton
+      loading={isLoading}
       onClick={handleGoogleLogin}
-      variant="outline"
-      size="lg"
-      className="px-10!"
+      className="px-10"
+      disabled={isLoading}
     >
       <Icons.google className="h-4 w-4" />
       Continue with Google
-    </Button>
+    </LoadingButton>
   );
 };
 

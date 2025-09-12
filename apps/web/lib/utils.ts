@@ -8,6 +8,8 @@ import {
   intervalToDuration,
 } from "date-fns";
 
+import { enUS } from "date-fns/locale";
+
 export function formatCustomDate(dateInput: Date | string) {
   const date = typeof dateInput === "string" ? parseISO(dateInput) : dateInput;
 
@@ -46,4 +48,37 @@ export const formatCallDuration = (joinedAt: string, leftAt: string | null) => {
     parts.push(`${duration.seconds}s`);
 
   return parts.length > 0 ? parts.join(" ") : "< 1s";
+};
+
+export const shortEnLocale = {
+  ...enUS,
+  formatDistance: (token: string, count: number, options?: any) => {
+    // Handle "now"
+    if ((token === "lessThanXSeconds" || token === "xSeconds") && count < 5) {
+      return "now";
+    }
+
+    const format = {
+      lessThanXMinutes: "{{count}} min",
+      xMinutes: "{{count}} min",
+      aboutXHours: "{{count}} hr",
+      xHours: "{{count}} hr",
+      xDays: "{{count}} d",
+      aboutXMonths: "{{count}} mo",
+      xMonths: "{{count}} mo",
+      aboutXYears: "{{count}} y",
+      xYears: "{{count}} y",
+      overXYears: "{{count}} y",
+      almostXYears: "{{count}} y",
+      lessThanXSeconds: "{{count}} sec",
+      xSeconds: "{{count}} sec",
+    } as Record<string, string>;
+
+    let text = format[token] || "";
+    text = text.replace("{{count}}", count.toString());
+
+    return options?.addSuffix
+      ? text + (options.comparison > 0 ? " from now" : " ago")
+      : text;
+  },
 };

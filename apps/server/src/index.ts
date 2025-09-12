@@ -73,6 +73,12 @@ app.route("/api", routes);
 const port = env.PORT || 1284;
 
 // Get network IP address
+/**
+ * Retrieves the network IP address of the machine.
+ * Iterates through network interfaces to find the first non-internal IPv4 address.
+ * Falls back to 127.0.0.1 if no external IP is found.
+ * @returns {string} The network IP address or localhost
+ */
 const getNetworkIP = () => {
   const nets = networkInterfaces();
   for (const name of Object.keys(nets)) {

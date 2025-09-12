@@ -7,6 +7,8 @@ config({ path: resolve(process.cwd(), "../../.env") });
 
 export const env = createEnv({
   server: {
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    
     DATABASE_URL: z
       .string({ message: "The DATABASE_URL environment variable must be set." })
       .url(
@@ -63,6 +65,14 @@ export const env = createEnv({
       .string({ message: "The BACKEND_URL environment variable is required." })
       .url("BACKEND_URL must be a valid URL (e.g., http://localhost:4000)."),
 
+    DISCORD_URL: z
+      .string({ message: "The DISCORD_URL webhook is required for thoughts." })
+      .url("DISCORD_URL must be a valid URL"),
+
+    MEDIASOUP_ANNOUNCED_IP: z
+      .string({ message: "The MEDIASOUP_ANNOUNCED_IP is optional." })
+      .optional()
+      .default("127.0.0.1"),
     PORT: z
       .string({ message: "The PORT environment variable is optional." })
       .optional()

@@ -6,9 +6,9 @@ import { Button } from "@call/ui/components/button";
 import { cn } from "@call/ui/lib/utils";
 import { Loader } from "lucide-react";
 import { forwardRef } from "react";
+import type { HTMLMotionProps } from "motion/react";
 
-interface LoadingButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface LoadingButtonProps extends HTMLMotionProps<"button"> {
   loading?: boolean;
 }
 
@@ -42,7 +42,7 @@ const LoadingButton = forwardRef<HTMLButtonElement, LoadingButtonProps>(
             )}
             style={{ gridArea: "1 / 1" }}
           >
-            {children}
+            {children as React.ReactNode}
           </span>
         </div>
       </Button>

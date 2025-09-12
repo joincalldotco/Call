@@ -2,24 +2,25 @@
 
 import { useSession } from "@/components/providers/session";
 import { useModal } from "@/hooks/use-modal";
+import { Skeletons } from "@/components/skeletons";
 import { CALLS_QUERY } from "@/lib/QUERIES";
 import type { Call } from "@/lib/types";
 import { formatCallDuration, formatCustomDate } from "@/lib/utils";
 import { Button } from "@call/ui/components/button";
-import { Icons } from "@call/ui/components/icons";
-import { Input } from "@call/ui/components/input";
-import { iconvVariants, UserProfile } from "@call/ui/components/use-profile";
-import { cn } from "@call/ui/lib/utils";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MoreVertical, X, Loader2, Phone, Trash, Users } from "lucide-react";
-import { useMemo, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@call/ui/components/dropdown-menu";
-import { Skeletons } from "@/components/skeletons";
+import { Icons } from "@call/ui/components/icons";
+import { Input } from "@call/ui/components/input";
+import { iconvVariants, UserProfile } from "@call/ui/components/use-profile";
+import { cn } from "@call/ui/lib/utils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { MoreVertical, Trash, Users, X, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import SocialButton from "@/components/auth/social-button";
 
 type FilterType = "all" | "my-calls" | "shared-with-me";
 
@@ -35,22 +36,20 @@ export function CallHistory() {
   } = useQuery({
     queryKey: ["calls"],
     queryFn: () => CALLS_QUERY.getCalls(),
+    enabled: user.id !== "guest",
   });
 
-  // Memoized filtered calls
   const filteredCalls = useMemo(() => {
     if (!calls) return [];
 
     let filtered = [...calls];
 
-    // Apply filter
     if (activeFilter === "my-calls") {
       filtered = filtered.filter((call) => call.creatorId === user.id);
     } else if (activeFilter === "shared-with-me") {
       filtered = filtered.filter((call) => call.creatorId !== user.id);
     }
 
-    // Apply search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((call) => {
@@ -74,16 +73,34 @@ export function CallHistory() {
   };
 
   if (isLoading) {
-    return <Skeletons.callHistory />;
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="relative w-full max-w-md">
+          <Input
+            type="text"
+            placeholder="Search by call name or participant..."
+            disabled
+            className="focus:ring-primary/20 h-11 !rounded-md border py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:ring-2"
+          />
+          <Icons.search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-50" />
+        </div>
+
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeletons.callHistory key={index} />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (isError) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 py-6">
         <div className="flex h-64 items-center justify-center">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="rounded-full bg-red-50 p-3">
-              <Phone className="h-8 w-8 text-red-500" />
+              <Icons.phoneIcon className="size-8 text-red-500" />
             </div>
             <p className="text-sm text-red-500">Failed to load call history</p>
             <Button
@@ -113,7 +130,7 @@ export function CallHistory() {
                 placeholder="Search by call name or participant..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="focus:ring-primary/20 h-11 rounded-lg border py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:ring-2"
+                className="focus:ring-primary/20 h-11 rounded-md border py-2.5 pl-10 pr-10 text-sm focus:outline-none focus:ring-2"
               />
               <Icons.search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
               {searchQuery && (
@@ -130,12 +147,11 @@ export function CallHistory() {
           </div>
         ) : null}
 
-        {/* No results message */}
         {hasCallHistory && !hasSearchResults && (
           <div className="flex h-64 flex-col items-center justify-center text-center">
             <div className="flex flex-col items-center gap-4">
               <div className="bg-muted/50 rounded-full p-4">
-                <Phone className="text-muted-foreground h-8 w-8" />
+                <Icons.phoneIcon className="text-muted-foreground size-8" />
               </div>
               <h3 className="text-lg font-medium">No calls found</h3>
               <p className="text-muted-foreground max-w-sm">
@@ -153,7 +169,7 @@ export function CallHistory() {
 
         {/* Call grid */}
         {hasSearchResults && (
-          <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="flex flex-col gap-3">
             {filteredCalls.map((call) => (
               <CallHistoryCard key={call.id} call={call} />
             ))}
@@ -175,55 +191,77 @@ const CallHistoryCard = ({ call }: CallHistoryCardProps) => {
   const participantsToShow = 3;
   const remainingParticipants = call.participants.length - participantsToShow;
   const queryClient = useQueryClient();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleHideCall = async () => {
     try {
+      setIsDeleting(true);
       await CALLS_QUERY.hideCall(call.id);
       queryClient.invalidateQueries({ queryKey: ["calls"] });
     } catch (error) {
       console.error("Failed to hide call:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
-
+  const { onOpen } = useModal();
   const handleViewUsers = () => {
-    console.log("View users clicked", call.participants);
+    onOpen("view-participants", {
+      participants: call.participants.map((p) => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        image: p.image ?? undefined,
+        joinedAt: p.joinedAt ?? undefined,
+        leftAt: p.leftAt ?? undefined,
+      })),
+      callInfo: {
+        id: call.id,
+        name: call.name,
+      },
+    });
   };
 
   return (
-    <div className="bg-inset-accent flex flex-col gap-3 rounded-xl border p-4">
+    <div className="bg-inset-accent flex flex-col gap-3 rounded-md border p-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-medium first-letter:uppercase">
-          {call.name}
-        </h1>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleViewUsers}>
-              <Users className="mr-2 h-4 w-4" />
-              View Users
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleHideCall} variant="destructive">
-              <Trash className="mr-2 h-4 w-4" />
-              Hide Call
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <h1 className="font-medium first-letter:uppercase">{call.name}</h1>
+
+        <div className="flex">
+          <Button
+            className="flex items-center justify-center"
+            variant="ghost"
+            size="icon"
+            onClick={handleViewUsers}
+          >
+            <Users className="h-4 w-4" />
+          </Button>
+          <Button
+            className="flex items-center justify-center text-[#ff6347] hover:text-[#ff6347]/80"
+            variant="ghost"
+            size="icon"
+            onClick={handleHideCall}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Icons.scheduleIcon className="size-4" />
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               {formatCustomDate(call.joinedAt)}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <Icons.timer className="size-4" />
-            <span className="text-muted-foreground">
+            <span className="text-muted-foreground text-sm">
               {formatCallDuration(call.joinedAt, call.leftAt)}
             </span>
           </div>
@@ -264,23 +302,38 @@ const CallHistoryCard = ({ call }: CallHistoryCardProps) => {
 const NoCallsFound = () => {
   const { onOpen } = useModal();
   const { user } = useSession();
+
+  const isGuest = !user?.id || user.id === "guest";
+
   return (
     <div className="bg-inset-accent border-inset-accent-foreground col-span-full flex h-96 flex-col items-center justify-center gap-4 rounded-xl border p-4 text-center">
       <div className="flex flex-col items-center">
         <h1 className="text-lg font-medium">
-          Ops <span className="first-letter:uppercase">{user.name}</span>! You
-          don&apos;t have any calls yet.
+          {isGuest ? (
+            "Sign in to access your call history"
+          ) : (
+            <>
+              Ops <span className="first-letter:uppercase">{user.name}</span>!
+              You don&apos;t have any calls yet.
+            </>
+          )}
         </h1>
         <p className="text-muted-foreground">
-          You can create a call to start a conversation with your friends.
+          {isGuest
+            ? "Create meetings and view your call history."
+            : "You can create a call to start a conversation with your friends."}
         </p>
       </div>
-      <Button
-        onClick={() => onOpen("start-call")}
-        className="bg-muted-foreground hover:bg-muted-foreground/80"
-      >
-        Start a call
-      </Button>
+      {isGuest ? (
+        <SocialButton />
+      ) : (
+        <Button
+          onClick={() => onOpen("start-call")}
+          className="hover:bg-muted-foreground/80 border border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
+        >
+          Start a call
+        </Button>
+      )}
     </div>
   );
 };

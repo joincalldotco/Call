@@ -1,5 +1,6 @@
 "use client";
 
+import { useModal } from "@/hooks/use-modal";
 import { Collapsible } from "@call/ui/components/collapsible";
 import { Icons, type IconProps } from "@call/ui/components/icons";
 import {
@@ -7,9 +8,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
+  useSidebar,
 } from "@call/ui/components/sidebar";
 import type { JSX } from "react";
-import { useModal } from "@/hooks/use-modal";
 
 export function NavMain({
   items,
@@ -28,21 +30,24 @@ export function NavMain({
   onSelect?: (title: string) => void;
 }) {
   const { onOpen } = useModal();
+  const { state } = useSidebar();
+  const isExpanded = state === "expanded";
 
   return (
     <SidebarGroup>
       <SidebarMenu className="flex flex-col">
-        <SidebarMenuItem className="mb-2">
+        <SidebarMenuItem className="mb-5">
           <SidebarMenuButton
             tooltip="Start Call"
             isActive={true}
             onClick={() => onOpen("start-call")}
-            className="flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-3 rounded-lg border border-gray-200 !bg-white text-sm !font-semibold hover:bg-gray-50"
           >
-            <Icons.plus className="size-4" />
-            <span>Start Call</span>
+            <Icons.plus style={{ width: 14, height: 14 }} />
+            {isExpanded && <span className="text-black">Start Call</span>}
           </SidebarMenuButton>
         </SidebarMenuItem>
+
         {items.map((item) => (
           <Collapsible
             key={item.title}

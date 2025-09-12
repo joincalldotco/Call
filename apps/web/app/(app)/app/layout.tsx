@@ -8,7 +8,7 @@ import { toast } from "sonner";
 const sectionMap = [
   { path: "/app/call", title: "Call" },
   { path: "/app/teams", title: "Teams" },
-  { path: "/app/contact", title: "Contact" },
+  { path: "/app/contacts", title: "Contacts" },
   { path: "/app/schedule", title: "Schedule" },
   { path: "/app/notifications", title: "Notifications" },
   { path: "/app/profile", title: "Profile" },

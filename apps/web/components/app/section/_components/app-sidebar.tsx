@@ -20,6 +20,7 @@ import Link from "next/link";
 import * as React from "react";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
+import { useCallContext } from "@/contexts/call-context";
 
 const data = {
   navMain: [
@@ -39,8 +40,8 @@ const data = {
       icon: Icons.peopleIcon,
     },
     {
-      title: "Contact",
-      url: "#",
+      title: "Contacts",
+      url: "/app/contacts",
       icon: Icons.contactsIcon,
     },
     {
@@ -52,7 +53,7 @@ const data = {
   navFooter: [
     {
       title: "Settings",
-      url: "/app/settings",
+      url: "/app/profile",
       icon: Icons.settings,
       type: "link",
     },
@@ -85,8 +86,10 @@ export function AppSidebar({
     isActive: item.title === selectedSection,
   }));
 
+  const { state } = useCallContext();
+
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible={state.joined ? "offcanvas" : "icon"} {...props}>
       <SidebarHeader>
         <NavUser
           user={{

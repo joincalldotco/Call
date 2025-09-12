@@ -1,24 +1,22 @@
 "use client";
-import { useContacts } from "@/components/providers/contacts";
 import { useModal } from "@/hooks/use-modal";
 import { TEAMS_QUERY } from "@/lib/QUERIES";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@call/ui/components/dialog";
-import { Label } from "@call/ui/components/label";
-import { Checkbox } from "@call/ui/components/checkbox";
 import { Button } from "@call/ui/components/button";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { LoadingButton } from "@call/ui/components/loading-button";
+import { ContactsSelector } from "./contacts-selector";
 
 export const AddMemberToTeam = () => {
   const { isOpen, onClose, type, data } = useModal();
-  const { contacts, isLoading: contactsLoading } = useContacts();
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
 
   const team = data?.team;
@@ -60,69 +58,31 @@ export const AddMemberToTeam = () => {
 
   return (
     <Dialog open={isModalOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent
+        className="!max-w-md rounded-2xl bg-[#232323] p-6"
+        showCloseButton={false}
+      >
+        <DialogHeader className="flex flex-col">
           <DialogTitle>Add Member to {team?.name}</DialogTitle>
+          <DialogDescription>
+            Select contacts to add to this team.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {contactsLoading ? (
-            <div className="flex h-32 items-center justify-center">
-              <p className="text-muted-foreground">Loading contacts...</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {contacts && contacts.length > 0 ? (
-                contacts.map((contact) => {
-                  if (!contact) return null;
-                  const isAlreadyMember = team?.members.some(
-                    (member) => member.email === contact.email
-                  );
-                  const isSelected = selectedContacts.includes(contact.email);
-
-                  return (
-                    <div
-                      key={contact.email}
-                      className="flex items-center space-x-2"
-                    >
-                      <Checkbox
-                        id={contact.email}
-                        checked={isSelected}
-                        onCheckedChange={() =>
-                          handleContactToggle(contact.email)
-                        }
-                        disabled={isAlreadyMember}
-                      />
-                      <Label
-                        htmlFor={contact.email}
-                        className="flex-1 text-sm font-medium"
-                      >
-                        {contact.email}
-                        {isAlreadyMember && (
-                          <span className="text-muted-foreground ml-2 text-xs">
-                            (Already a member)
-                          </span>
-                        )}
-                      </Label>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="flex h-32 items-center justify-center border">
-                  <p className="text-muted-foreground">No contacts found</p>
-                </div>
-              )}
-            </div>
-          )}
+          <ContactsSelector
+            selectedContacts={selectedContacts}
+            onContactsChange={setSelectedContacts}
+            disabled={addMembersPending}
+            disabledEmails={(team?.members || []).map((m) => m.email)}
+          />
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
             <LoadingButton
               onClick={handleAddMembers}
               disabled={addMembersPending || selectedContacts.length === 0}
               loading={addMembersPending}
+              className="h-10 w-full rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-900 hover:bg-gray-50"
             >
               Add Members
             </LoadingButton>

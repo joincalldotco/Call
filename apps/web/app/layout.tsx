@@ -1,11 +1,10 @@
 import { Geist, Geist_Mono, Lora } from "next/font/google";
 
-import "@call/ui/globals.css";
-import "@livekit/components-styles";
 import { ThemeAndQueryProviders } from "@/components/providers/theme-and-query";
 import { siteConfig } from "@/lib/site";
-import type { Metadata } from "next";
+import "@call/ui/globals.css";
 import { Databuddy } from "@databuddy/sdk";
+import type { Metadata } from "next";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -37,6 +36,16 @@ export const metadata: Metadata = {
     "Call0.net",
     "Call0.org",
     "Call0.io",
+    "joincall",
+    "join call",
+    "joincall.co",
+    "joincall.com",
+    "joincall.net",
+    "joincall.org",
+    "joincall.io",
+    "joincall.ai",
+    "joincall.app",
+    "joincall.dev",
     "Open source",
     "Zoom",
     "Google Meet",
@@ -44,6 +53,7 @@ export const metadata: Metadata = {
     "AI-Native alternative",
     "AI-Native alternative to Zoom",
     "AI-Native alternative to Google Meet",
+    "AI-Native alternative to Microsoft Teams",
   ],
   creator: siteConfig.links.author,
   authors: [
@@ -91,16 +101,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <script
-        src="https://cdn.peasy.so/peasy.js"
-        data-website-id="01jybpzkjn3xgyfj6x4dq51ftt"
-        async
-      ></script>
       <body
         className={`${fontSans.variable} ${fontLora.variable} ${fontMono.variable} custom_scrollbar font-sans antialiased transition-all duration-300`}
       >
         <ThemeAndQueryProviders>
-          {children}
+          <div className="size-full">{children}</div>
           <Databuddy
             clientId="ciU4COouaNeeu56duBjT7"
             trackHashChanges={true}

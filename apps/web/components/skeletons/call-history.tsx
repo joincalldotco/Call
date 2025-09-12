@@ -11,12 +11,10 @@ export const CallHistorySkeleton = () => {
   const remainingParticipants = numberOfParticipants - participantsToShow;
 
   return (
-    <div className="bg-inset-accent flex flex-col gap-3 rounded-xl border p-4">
+    <div className="bg-inset-accent flex flex-col gap-3 rounded-md border p-4">
       <div className="flex items-center justify-between">
         <Skeleton className="bg-muted h-4 w-24" />
-        <Button variant="ghost" size="icon">
-          <MoreVertical className="h-4 w-4" />
-        </Button>
+      
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

@@ -7,12 +7,6 @@ const fileIdSchema = z
   .min(1, "File ID cannot be empty")
   .max(250, "File ID cannot be longer than 250 characters");
 
-export const sendMailSchema = z.object({
-  to: z.string().email(),
-  subject: z.string().min(1),
-  text: z.string().min(1),
-});
-
 export const createRoomSchema = z.object({
   name: z
     .string()

@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import { Button } from "@call/ui/components/button";
 import { SquareDot } from "@call/ui/components/square-dot";
 import { Icons } from "@call/ui/components/icons";
 import { siteConfig } from "@/lib/site";
-import { Sun, Moon, Users, Loader2, Menu, X } from "lucide-react";
+import { Users, Loader2, Menu, X } from "lucide-react";
 
 const links = [
   {
@@ -34,7 +33,6 @@ const links = [
 ];
 
 const Navbar = () => {
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -42,18 +40,13 @@ const Navbar = () => {
     setMounted(true);
   }, []);
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-
   return (
-    <header className="border-border bg-background/50 sticky top-0 z-50 border-b backdrop-blur-sm dark:border-white/5">
-      <div className="relative mx-auto flex w-full max-w-5xl items-center justify-between border-x px-6 py-2 dark:border-white/5">
+    <header className="fixed inset-x-0 top-4 z-50">
+      <div className="relative mx-auto flex w-full max-w-3xl !bg-[#151515] items-center justify-between rounded-xl border border-border  px-4 py-2 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/50 dark:border-white/5">
         {/* Left: Logo */}
         <Link href="/" className="z-50">
           <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Icons.logoDark className="block size-6 dark:hidden" />
-            <Icons.logo className="hidden size-6 dark:block" />
+            <Icons.logo className="size-6" />
             <span className="text-primary font-lora">Call</span>
           </h1>
         </Link>
@@ -75,70 +68,37 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Theme toggle */}
-          {mounted ? (
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={toggleTheme}
-              className="hover:bg-muted-foreground/10"
-            >
-              {theme === "dark" ? (
-                <Sun className="size-4" />
-              ) : (
-                <Moon className="size-4" />
-              )}
-            </Button>
-          ) : (
-            <div className="pointer-events-none flex size-9 items-center justify-center">
-              <Loader2 className="size-4 animate-spin" />
-            </div>
-          )}
-
           {/* Mobile Menu toggle */}
-          <div className="md:hidden">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => setMenuOpen((prev) => !prev)}
-              className="hover:bg-muted-foreground/10"
-            >
-              {menuOpen ? (
-                <X className="size-4" />
-              ) : (
-                <Menu className="size-4" />
-              )}
-            </Button>
-          </div>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden"
+          >
+            {menuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+          </Button>
         </div>
 
-        {/* Mobile dropdown nav */}
+        {/* Mobile Menu */}
         {menuOpen && (
-          <div className="bg-background absolute left-0 right-0 top-full flex flex-col border-t p-4 md:hidden dark:border-white/5">
-            {links.map((link) => (
-              <Button
-                key={link.label}
-                variant="ghost"
-                className="hover:bg-muted-foreground/10 w-full justify-start"
-                asChild
-              >
-                <Link
-                  href={link.href}
-                  target={link.target ?? "_blank"}
-                  onClick={() => setMenuOpen(false)}
+          <div className="absolute left-0 right-0 top-full z-40 border-b bg-background/95 backdrop-blur-sm dark:border-white/5 md:hidden">
+            <div className="flex flex-col gap-2 p-4">
+              {links.map((link) => (
+                <Button
+                  key={link.label}
+                  variant="ghost"
+                  className="justify-start"
+                  asChild
                 >
-                  <div className="flex items-center gap-2">
-                    <link.icon className="size-4" />
+                  <Link href={link.href} target={link.target ?? "_blank"}>
+                    <link.icon className="mr-2 size-4" />
                     {link.label}
-                  </div>
-                </Link>
-              </Button>
-            ))}
+                  </Link>
+                </Button>
+              ))}
+            </div>
           </div>
         )}
-
-        <SquareDot position="bottomLeft" />
-        <SquareDot position="bottomRight" />
       </div>
     </header>
   );

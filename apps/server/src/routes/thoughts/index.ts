@@ -2,6 +2,7 @@ import { sendToDiscordWebhook } from "@/lib/discord";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { ReqVariables } from "@/index";
+import { env } from "@/config/env";
 
 const thoughtsRoutes = new Hono<{ Variables: ReqVariables }>();
 
@@ -34,7 +35,7 @@ thoughtsRoutes.post("/create", async (c) => {
     type,
     description,
     user,
-    process.env.DISCORD_URL as string
+    env.DISCORD_URL
   );
 
   return c.json({ message: "Team created" });

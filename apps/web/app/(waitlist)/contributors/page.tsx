@@ -51,41 +51,41 @@ export default async function Contributors() {
   const otherContributors = contributors.slice(2);
 
   return (
-    <main className="min-h-screen gap-16 flex flex-col bg-muted dark:bg-background relative z-0">
+    <main className="bg-muted dark:bg-background relative z-0 mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-16 px-6 py-20">
       {/* Top 2 Contributors */}
       {topContributors.length > 0 && (
-        <div className="max-w-5xl w-full mx-auto px-6 flex items-center justify-center flex-col relative gap-12 pt-20">
+        <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center justify-center gap-12 px-6 pt-20">
           <div className="flex flex-col items-center justify-center gap-4 text-center">
-            <h1 className="text-4xl font-bold font-lora text-primary/90">
+            <h1 className="font-lora text-primary/90 text-4xl font-bold">
               Top Aura farmers 😎
             </h1>
-            <p className="text-lg text-muted-foreground max-w-md">
+            <p className="text-muted-foreground max-w-md text-lg">
               The devs who farmed the most Aura by contributing to Call
             </p>
           </div>
-          <div className="flex flex-row gap-8 w-full justify-center">
+          <div className="flex w-full flex-row justify-center gap-8">
             {topContributors.map((contributor) => (
               <Link
                 key={contributor.id}
                 href={contributor.html_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col items-center gap-6 w-full max-w-sm rounded-3xl bg-background px-8 py-8 border hover:border-primary/15 dark:hover:border-white/10 dark:border-white/5 transition-all duration-300 "
+                className="bg-background hover:border-primary/15 flex w-full max-w-sm flex-col items-center gap-6 rounded-3xl border px-8 py-8 transition-all duration-300 dark:border-white/5 dark:hover:border-white/10"
               >
                 <Avatar className="h-20 w-20">
                   <AvatarImage
                     src={contributor.avatar_url}
                     alt={`${contributor.login}'s avatar`}
                   />
-                  <AvatarFallback className="font-medium text-lg">
+                  <AvatarFallback className="text-lg font-medium">
                     {contributor.login.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col items-center justify-center gap-2">
-                  <p className="text-lg font-semibold text-primary/90">
+                  <p className="text-primary/90 text-lg font-semibold">
                     {contributor.login}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {contributor.contributions} Aura
                   </p>
                 </div>
@@ -96,31 +96,31 @@ export default async function Contributors() {
       )}
 
       {/* Divider */}
-      <div className="h-px w-full bg-border dark:bg-white/5 max-w-lg mx-auto flex items-center justify-center gap-2 relative">
+      <div className="bg-border relative mx-auto flex h-px w-full max-w-lg items-center justify-center gap-2 dark:bg-white/5">
         <SquareDot />
         <SquareDot position="bottomRight" />
       </div>
 
       {/* Other Contributors */}
-      <div className="max-w-5xl w-full mx-auto px-6 flex items-center justify-center flex-col relative gap-12">
+      <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center justify-center gap-12 px-6">
         <div className="flex flex-col items-center justify-center gap-4 text-center">
-          <h2 className="text-3xl font-bold font-lora text-primary/90">
+          <h2 className="font-lora text-primary/90 text-3xl font-bold">
             Call Community
           </h2>
-          <p className="text-base text-muted-foreground max-w-md">
+          <p className="text-muted-foreground max-w-md text-base">
             Every Aura matters. Meet the community behind Call.
           </p>
         </div>
 
         {otherContributors.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 w-full">
+          <div className="grid w-full grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {otherContributors.map((contributor) => (
               <Link
                 key={contributor.id}
                 href={contributor.html_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col items-center gap-3 p-4 rounded-xl  hover:border-ring  transition-colors duration-200 group"
+                className="hover:border-ring group flex flex-col items-center gap-3 rounded-xl p-4 transition-colors duration-200"
               >
                 <Avatar className="h-14 w-14">
                   <AvatarImage
@@ -132,10 +132,10 @@ export default async function Contributors() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-primary/80 truncate w-full group-hover:text-primary/90 transition-colors">
+                  <p className="text-primary/80 group-hover:text-primary/90 w-full truncate text-sm font-medium transition-colors">
                     {contributor.login}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {contributor.contributions} Aura
                   </p>
                 </div>
@@ -146,12 +146,12 @@ export default async function Contributors() {
       </div>
 
       {/* CTA Section */}
-      <div className="max-w-2xl w-full mx-auto px-6 flex items-center justify-center flex-col relative gap-8 pb-20">
+      <div className="relative mx-auto flex w-full max-w-2xl flex-col items-center justify-center gap-8 px-6 pb-20">
         <div className="flex flex-col items-center justify-center gap-4 text-center">
-          <h3 className="text-2xl font-bold font-lora text-primary/90">
+          <h3 className="font-lora text-primary/90 text-2xl font-bold">
             Ready to Farm Aura?????
           </h3>
-          <p className="text-base text-muted-foreground max-w-md">
+          <p className="text-muted-foreground max-w-md text-base">
             Start building the future of meetings with us.
           </p>
         </div>
@@ -166,9 +166,7 @@ export default async function Contributors() {
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href="/" target="_blank" rel="noopener noreferrer">
-              Back to Home
-            </Link>
+            <Link href="/">Back to Home</Link>
           </Button>
         </div>
       </div>

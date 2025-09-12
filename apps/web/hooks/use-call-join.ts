@@ -2,9 +2,11 @@
 
 import { useCallContext } from "@/contexts/call-context";
 import { useCallback } from "react";
-
+import { toast } from "sonner";
+import { useSidebar } from "@call/ui/components/sidebar";
 export const useCallJoin = () => {
-  const { state, dispatch, mediasoup } = useCallContext();
+  const { state, dispatch, mediasoup, session } = useCallContext();
+  const { open, setOpen } = useSidebar();
 
   const recordCallParticipation = async (callId: string) => {
     try {
@@ -26,7 +28,6 @@ export const useCallJoin = () => {
 
   const handleJoin = useCallback(async () => {
     if (!state.callId || !mediasoup.connected) {
-      alert("Not connected to server");
       return;
     }
 
@@ -38,7 +39,6 @@ export const useCallJoin = () => {
 
       const rtpCapabilities = joinRes.rtpCapabilities;
       if (!rtpCapabilities) {
-        alert("No RTP capabilities received from the router");
         return;
       }
       dispatch({ type: "SET_PRODUCERS", payload: joinRes.producers || [] });
@@ -77,7 +77,7 @@ export const useCallJoin = () => {
         stream = await navigator.mediaDevices.getUserMedia(constraints);
 
         if (!stream || !stream.getTracks().length) {
-          alert(
+          toast.error(
             "No audio/video tracks detected. Check permissions and devices."
           );
           console.error("Empty local stream:", stream);
@@ -94,12 +94,23 @@ export const useCallJoin = () => {
           }))
         );
 
-        stream.getTracks().forEach((track) => {
-          track.enabled = true;
-          console.log(`[Call] Enabled ${track.kind} track:`, track.id);
-        });
+        const audioTrack = stream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = state.isLocalMicOn;
+          console.log(
+            `[Call] Set audio track enabled=${audioTrack.enabled}:`,
+            audioTrack.id
+          );
+        }
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.enabled = state.isLocalCameraOn;
+          console.log(
+            `[Call] Set video track enabled=${videoTrack.enabled}:`,
+            videoTrack.id
+          );
+        }
       } catch (err) {
-        alert("Error accessing camera/microphone. Check permissions.");
         console.error("Error getUserMedia:", err);
         return;
       }
@@ -109,7 +120,6 @@ export const useCallJoin = () => {
       console.log("[Call] Production result:", myProducers);
 
       if (!myProducers || !myProducers.length) {
-        alert("Could not produce audio/video. Check console for more details.");
         console.error("Empty producers:", myProducers);
         return;
       }
@@ -118,20 +128,33 @@ export const useCallJoin = () => {
         type: "SET_MY_PRODUCER_IDS",
         payload: myProducers.map((p: any) => p.id),
       });
+      dispatch({
+        type: "SET_MY_PRODUCERS",
+        payload: myProducers.map((p: any) => ({
+          id: p.id,
+          kind: p.kind,
+          source: p.appData?.source || "unknown"
+        })),
+      });
       dispatch({ type: "SET_JOINED", payload: true });
       console.log(
         "[Call] Successfully joined with producers:",
         myProducers.map((p) => p.id)
       );
 
-      await recordCallParticipation(state.callId);
+      if (session?.user?.id && session.user.id !== "guest") {
+        await recordCallParticipation(state.callId);
+      }
     } catch (error) {
       console.error("Error joining call:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      alert(`Failed to join call: ${errorMessage}`);
+      toast.error(`Failed to join call: ${errorMessage}`);
     }
-  }, [state, mediasoup, dispatch]);
+    if (open) {
+      setOpen(false);
+    }
+  }, [state, mediasoup, dispatch, open, setOpen]);
 
   return { handleJoin };
 };
