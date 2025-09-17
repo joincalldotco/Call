@@ -12,8 +12,8 @@ import {
 } from "@call/db/schema";
 import { eq, inArray, desc, and, sql } from "drizzle-orm";
 import type { ReqVariables } from "../../index.js";
-import { sendMail } from "../../lib/email.js";
-import { env } from "@/config/env";
+import { sendMail } from "@call/auth/utils/send-mail";
+import { cache } from "../../lib/cache.js";
 
 const callsRoutes = new Hono<{ Variables: ReqVariables }>();
 
@@ -43,6 +43,7 @@ callsRoutes.post("/create", async (c) => {
     return c.json({ message: "Unauthorized" }, 401);
   }
 
+  // Validate input
   let body;
   try {
     body = await c.req.json();
@@ -101,6 +102,7 @@ callsRoutes.post("/create", async (c) => {
 
   // Insert invitations and notifications
   console.log("📧 [CALLS DEBUG] Creating invitations and notifications...");
+  const userIdsToInvalidate = [user.id];
   try {
     for (const email of members || []) {
       const inviteeId = emailToUserId.get(email);
@@ -121,6 +123,7 @@ callsRoutes.post("/create", async (c) => {
       console.log(`✅ [CALLS DEBUG] Invitation created for ${email}`);
 
       if (inviteeId) {
+        userIdsToInvalidate.push(inviteeId);
         const notificationMessage = body.teamId
           ? `${user.name || user.email} started a meeting in team: ${name}`
           : `${user.name || user.email} is inviting you to a call: ${name}`;
@@ -138,7 +141,7 @@ callsRoutes.post("/create", async (c) => {
         const mailResult = await sendMail({
           to: email,
           subject: "Invitation to join Call",
-          text: `Hello,\n\n${user.name || user.email} is inviting you to a call: ${name}\n\nJoin the call: ${env.FRONTEND_URL}/calls/${callId}`,
+          text: `Hello,\n\n${user.name || user.email} is inviting you to a call: ${name}\n\nJoin the call: ${process.env.FRONTEND_URL}/calls/${callId}`,
         });
         if (!mailResult.success) {
           console.error(
@@ -157,6 +160,11 @@ callsRoutes.post("/create", async (c) => {
       error
     );
     throw error;
+  }
+
+  // Invalidate notifications cache for all invited users
+  for (const userId of userIdsToInvalidate) {
+    await cache.del(cache.getUserNotificationsKey(userId));
   }
 
   console.log("🎉 [CALLS DEBUG] Call created successfully:", callId);
@@ -211,7 +219,18 @@ callsRoutes.get("/participated", async (c) => {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // Get all calls where user was a participant with participant details, excluding hidden calls
+    const cacheKey = cache.getUserCallsKey(user.id);
+
+    // Try to get from cache first
+    const cachedCalls = await cache.get(cacheKey);
+    if (cachedCalls) {
+      console.log(`[CACHE HIT] Calls for user ${user.id}`);
+      return c.json({ calls: cachedCalls });
+    }
+
+    console.log(`[CACHE MISS] Calls for user ${user.id}`);
+
+    // Get all calls where user was a participant with participant details
     const participatedCalls = await db
       .select({
         id: calls.id,
@@ -246,8 +265,6 @@ callsRoutes.get("/participated", async (c) => {
             name: userTable.name,
             email: userTable.email,
             image: userTable.image,
-            joinedAt: callParticipants.joinedAt,
-            leftAt: callParticipants.leftAt,
           })
           .from(callParticipants)
           .innerJoin(userTable, eq(callParticipants.userId, userTable.id))
@@ -259,6 +276,9 @@ callsRoutes.get("/participated", async (c) => {
         };
       })
     );
+
+    // Cache the result for 2 minutes (calls data changes frequently)
+    await cache.set(cacheKey, callsWithParticipants, 120);
 
     return c.json({ calls: callsWithParticipants });
   } catch (error) {
@@ -322,6 +342,9 @@ callsRoutes.post("/record-participation", async (c) => {
       );
     }
 
+    // Invalidate user's calls cache
+    await cache.del(cache.getUserCallsKey(user.id));
+
     return c.json({ success: true });
   } catch (error) {
     console.error("Error recording call participation:", error);
@@ -374,6 +397,9 @@ callsRoutes.post("/record-leave", async (c) => {
       );
 
     console.log(`[RECORD-LEAVE] Update result:`, result);
+
+    // Invalidate user's calls cache
+    await cache.del(cache.getUserCallsKey(user.id));
 
     return c.json({ success: true });
   } catch (error) {
@@ -572,10 +598,6 @@ callsRoutes.post("/:id/approve-join", async (c) => {
     const user = c.get("user");
     const body = await c.req.json();
     const { requesterId } = body;
-
-    console.log(
-      `[APPROVE-JOIN] Approving join request for user ${requesterId} in call ${callId}`
-    );
 
     if (!user || !user.id) {
       return c.json({ error: "Unauthorized" }, 401);

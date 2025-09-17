@@ -36,3 +36,5 @@ npm-debug.log*
 *.pem
 next-env.d.ts
 opencode.json
+keybinding.sh
+tasks.json
