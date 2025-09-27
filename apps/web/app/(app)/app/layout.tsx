@@ -1,6 +1,7 @@
 "use client";
 import { AppSidebar } from "@/components/app/section/_components/app-sidebar";
 import { Providers } from "@/components/providers";
+import { SidebarRight } from "@/components/app/section/_components/right-sidebar";
 import { SidebarInset, SidebarProvider } from "@call/ui/components/sidebar";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           onSectionSelect={handleSectionSelect}
         />
         <SidebarInset>{children}</SidebarInset>
+        <SidebarRight />
       </SidebarProvider>
     </Providers>
   );

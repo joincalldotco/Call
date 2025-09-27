@@ -24,31 +24,11 @@ import { useCallContext } from "@/contexts/call-context";
 
 const data = {
   navMain: [
-    {
-      title: "Call",
-      url: "#",
-      icon: Icons.phoneIcon,
-    },
-    {
-      title: "Schedule",
-      url: "#",
-      icon: Icons.scheduleIcon,
-    },
-    {
-      title: "Teams",
-      url: "#",
-      icon: Icons.peopleIcon,
-    },
-    {
-      title: "Contacts",
-      url: "/app/contacts",
-      icon: Icons.contactsIcon,
-    },
-    {
-      title: "Notifications",
-      url: "#",
-      icon: Icons.notificationsIcon,
-    },
+    { title: "Call", url: "#", icon: Icons.phoneIcon },
+    { title: "Schedule", url: "#", icon: Icons.scheduleIcon },
+    { title: "Teams", url: "#", icon: Icons.peopleIcon },
+    { title: "Contacts", url: "/app/contacts", icon: Icons.contactsIcon },
+    { title: "Notifications", url: "#", icon: Icons.notificationsIcon },
   ],
   navFooter: [
     {
