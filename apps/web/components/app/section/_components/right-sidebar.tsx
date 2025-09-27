@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { useSession } from "@/components/providers/session";
 import { useCallContext } from "@/contexts/call-context";
+import { Button } from "@call/ui/components/button";
 import { Icons } from "@call/ui/components/icons";
 import { Input } from "@call/ui/components/input";
 import {
@@ -12,7 +12,7 @@ import {
 import { cn } from "@call/ui/lib/utils";
 import { AnimatePresence, motion, type Transition } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Contacts from "../../section/contacts";
 import Notifications from "../../section/notifications";
 import RecentCalls from "../../section/recent-call";
@@ -45,6 +45,7 @@ const DEFAULT_SECTION_KEY = SECTIONS[0]?.title.toLowerCase() || "call";
 export function SidebarRight({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const [activeKey, setActiveKey] = useState<string>(DEFAULT_SECTION_KEY);
   const { state } = useCallContext();
 
   const router = useRouter();
@@ -54,17 +55,42 @@ export function SidebarRight({
     const key = searchParams?.get(KEY);
     return SECTIONS.some((s) => s.title.toLowerCase() === key)
       ? key!
-      : DEFAULT_SECTION_KEY;
-  }, [searchParams]);
+      : activeKey;
+  }, [searchParams, activeKey]);
+
+  useEffect(() => {
+    const key = searchParams?.get(KEY);
+    if (key) {
+      setActiveKey(key);
+    }
+  }, [searchParams, setActiveKey]);
 
   const handleSectionChange = useCallback(
     (key: string) => {
+      setActiveKey(key);
       const params = new URLSearchParams(searchParams?.toString() || "");
       params.set(KEY, key);
       router.replace(`?${params.toString()}`);
     },
-    [router, searchParams]
+    [router, searchParams, setActiveKey]
   );
+
+  const characters = useMemo(() => {
+    const entities = activeKey.split("").map((ch) => ch.toLowerCase());
+    const characters = [];
+
+    for (let index = 0; index < entities.length; index++) {
+      const entity = entities[index];
+      const count = entities.slice(0, index).filter((e) => e === entity).length;
+
+      characters.push({
+        id: `${entity}${count + 1}`,
+        label: characters.length === 0 ? entity?.toUpperCase() : entity,
+      });
+    }
+
+    return characters;
+  }, [activeKey]);
 
   return (
     <Sidebar
@@ -74,15 +100,32 @@ export function SidebarRight({
     >
       <SidebarHeader>
         <ExpandableTabs
-          sectionKey={sectionKey}
+          sectionKey={activeKey}
           handleSectionChange={handleSectionChange}
         />
-        <Input placeholder={`Search ${sectionKey} ...`} />
+        <Input placeholder={`Search ${activeKey} ...`} />
       </SidebarHeader>
       <SidebarContent className="p-4">
         <div className="flex items-center gap-2">
           <div className="bg-border h-px w-4" />
-          <span className="text-sm font-medium capitalize">{sectionKey}</span>
+          <p className="flex">
+            <AnimatePresence mode="popLayout">
+              {characters.map((character) => (
+                <motion.span
+                  key={character.id}
+                  layoutId={character.id}
+                  layout="position"
+                  className="inline-block"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={TRANSITION}
+                >
+                  {character.label}
+                </motion.span>
+              ))}
+            </AnimatePresence>
+          </p>
         </div>
       </SidebarContent>
     </Sidebar>
@@ -117,7 +160,7 @@ const ExpandableTabs = ({
     <div className="flex gap-1">
       {SECTIONS.map((section, index) => {
         return (
-          <motion.button
+          <Button
             key={section.title}
             variants={buttonVariants}
             initial={false}
@@ -128,6 +171,7 @@ const ExpandableTabs = ({
             className={cn(
               "bg-sidebar-inset flex h-9 flex-1 items-center justify-center rounded-md px-3"
             )}
+            variant="secondary"
           >
             {<section.icon className="size-4" />}
             <AnimatePresence initial={false}>
@@ -144,7 +188,7 @@ const ExpandableTabs = ({
                 </motion.span>
               )}
             </AnimatePresence>
-          </motion.button>
+          </Button>
         );
       })}
     </div>
