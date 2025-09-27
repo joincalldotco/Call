@@ -20,10 +20,10 @@ import Schedules from "../../section/schedules";
 import Teams from "../../section/teams";
 
 const TRANSITION: Transition = {
-  delay: 0.1,
   type: "spring",
   bounce: 0,
   duration: 0.5,
+  ease: "easeInOut",
 };
 
 const KEY = "CALLSECTION";
@@ -50,13 +50,6 @@ export function SidebarRight({
 
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const sectionKey = useMemo(() => {
-    const key = searchParams?.get(KEY);
-    return SECTIONS.some((s) => s.title.toLowerCase() === key)
-      ? key!
-      : activeKey;
-  }, [searchParams, activeKey]);
 
   useEffect(() => {
     const key = searchParams?.get(KEY);
