@@ -45,27 +45,7 @@ const DEFAULT_SECTION_KEY = SECTIONS[0]?.title.toLowerCase() || "call";
 export function SidebarRight({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useSession();
-
   const { state } = useCallContext();
-
-  return (
-    <Sidebar
-      {...props}
-      className={cn("sticky top-0 h-svh w-[350px]")}
-      {...props}
-    >
-      <SidebarHeader>
-        <ExpandableTabs />
-        <Input placeholder="Search..." />
-      </SidebarHeader>
-      <SidebarContent></SidebarContent>
-    </Sidebar>
-  );
-}
-
-const ExpandableTabs = () => {
-  const outsideClickRef = useRef(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -86,16 +66,44 @@ const ExpandableTabs = () => {
     [router, searchParams]
   );
 
+  return (
+    <Sidebar
+      {...props}
+      className={cn("sticky top-0 h-svh w-[350px]")}
+      {...props}
+    >
+      <SidebarHeader>
+        <ExpandableTabs
+          sectionKey={sectionKey}
+          handleSectionChange={handleSectionChange}
+        />
+        <Input placeholder={`Search ${sectionKey} ...`} />
+      </SidebarHeader>
+      <SidebarContent className="p-4">
+        <div className="flex items-center gap-2">
+          <div className="bg-border h-px w-4" />
+          <span className="text-sm font-medium capitalize">{sectionKey}</span>
+        </div>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
+
+interface ExpandableTabsProps {
+  sectionKey: string;
+  handleSectionChange: (key: string) => void;
+}
+
+const ExpandableTabs = ({
+  sectionKey,
+  handleSectionChange,
+}: ExpandableTabsProps) => {
   const buttonVariants = {
     initial: {
       gap: 0,
-      paddingLeft: ".5rem",
-      paddingRight: ".5rem",
     },
     animate: (isSelected: boolean) => ({
       gap: isSelected ? ".5rem" : 0,
-      paddingLeft: isSelected ? "1rem" : ".5rem",
-      paddingRight: isSelected ? "1rem" : ".5rem",
     }),
   };
 
@@ -106,7 +114,7 @@ const ExpandableTabs = () => {
   };
 
   return (
-    <div ref={outsideClickRef} className="flex gap-1">
+    <div className="flex gap-1">
       {SECTIONS.map((section, index) => {
         return (
           <motion.button
@@ -118,7 +126,7 @@ const ExpandableTabs = () => {
             onClick={() => handleSectionChange(section.title.toLowerCase())}
             transition={TRANSITION}
             className={cn(
-              "bg-sidebar-inset flex h-9 flex-1 items-center justify-center rounded-md"
+              "bg-sidebar-inset flex h-9 flex-1 items-center justify-center rounded-md px-3"
             )}
           >
             {<section.icon className="size-4" />}
