@@ -1,6 +1,8 @@
 import * as React from "react";
 
 import { useSession } from "@/components/providers/session";
+import { useCallContext } from "@/contexts/call-context";
+import { Icons } from "@call/ui/components/icons";
 import { Input } from "@call/ui/components/input";
 import {
   Sidebar,
@@ -8,14 +10,14 @@ import {
   SidebarHeader,
 } from "@call/ui/components/sidebar";
 import { cn } from "@call/ui/lib/utils";
-import { useRef, useState } from "react";
 import { AnimatePresence, motion, type Transition } from "motion/react";
-import { Icons } from "@call/ui/components/icons";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useRef } from "react";
+import Contacts from "../../section/contacts";
+import Notifications from "../../section/notifications";
 import RecentCalls from "../../section/recent-call";
 import Schedules from "../../section/schedules";
 import Teams from "../../section/teams";
-import Contacts from "../../section/contacts";
-import Notifications from "../../section/notifications";
 
 const TRANSITION: Transition = {
   delay: 0.1,
@@ -24,15 +26,33 @@ const TRANSITION: Transition = {
   duration: 0.5,
 };
 
+const KEY = "CALLSECTION";
+
+const SECTIONS = [
+  { title: "Call", icon: Icons.phoneIcon, component: RecentCalls },
+  { title: "Schedule", icon: Icons.scheduleIcon, component: Schedules },
+  { title: "Teams", icon: Icons.peopleIcon, component: Teams },
+  { title: "Contacts", icon: Icons.contactsIcon, component: Contacts },
+  {
+    title: "Notifications",
+    icon: Icons.notificationsIcon,
+    component: Notifications,
+  },
+];
+
+const DEFAULT_SECTION_KEY = SECTIONS[0]?.title.toLowerCase() || "call";
+
 export function SidebarRight({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useSession();
 
+  const { state } = useCallContext();
+
   return (
     <Sidebar
-      collapsible="none"
-      className={cn("sticky top-0 hidden h-svh w-[350px] border-l lg:flex")}
+      {...props}
+      className={cn("sticky top-0 h-svh w-[350px]")}
       {...props}
     >
       <SidebarHeader>
@@ -45,20 +65,26 @@ export function SidebarRight({
 }
 
 const ExpandableTabs = () => {
-  const [selected, setSelected] = useState<number | null>(null);
   const outsideClickRef = useRef(null);
 
-  const tabs = [
-    { title: "Call", icon: Icons.phoneIcon, component: RecentCalls },
-    { title: "Schedule", icon: Icons.scheduleIcon, component: Schedules },
-    { title: "Teams", icon: Icons.peopleIcon, component: Teams },
-    { title: "Contacts", icon: Icons.contactsIcon, component: Contacts },
-    {
-      title: "Notifications",
-      icon: Icons.notificationsIcon,
-      component: Notifications,
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const sectionKey = useMemo(() => {
+    const key = searchParams?.get(KEY);
+    return SECTIONS.some((s) => s.title.toLowerCase() === key)
+      ? key!
+      : DEFAULT_SECTION_KEY;
+  }, [searchParams]);
+
+  const handleSectionChange = useCallback(
+    (key: string) => {
+      const params = new URLSearchParams(searchParams?.toString() || "");
+      params.set(KEY, key);
+      router.replace(`?${params.toString()}`);
     },
-  ];
+    [router, searchParams]
+  );
 
   const buttonVariants = {
     initial: {
@@ -81,24 +107,23 @@ const ExpandableTabs = () => {
 
   return (
     <div ref={outsideClickRef} className="flex gap-1">
-      {tabs.map((tab, index) => {
+      {SECTIONS.map((section, index) => {
         return (
           <motion.button
-            key={tab.title}
+            key={section.title}
             variants={buttonVariants}
             initial={false}
             animate="animate"
-            custom={selected === index}
-            onMouseEnter={() => setSelected(index)}
-            onMouseLeave={() => setSelected(null)}
+            custom={sectionKey === section.title.toLowerCase()}
+            onClick={() => handleSectionChange(section.title.toLowerCase())}
             transition={TRANSITION}
             className={cn(
               "bg-sidebar-inset flex h-9 flex-1 items-center justify-center rounded-md"
             )}
           >
-            {<tab.icon className="size-4" />}
+            {<section.icon className="size-4" />}
             <AnimatePresence initial={false}>
-              {selected === index && (
+              {sectionKey === section.title.toLowerCase() && (
                 <motion.span
                   variants={spanVariants}
                   initial="initial"
@@ -107,7 +132,7 @@ const ExpandableTabs = () => {
                   transition={TRANSITION}
                   className="overflow-hidden whitespace-pre text-sm"
                 >
-                  {tab.title}
+                  {section.title}
                 </motion.span>
               )}
             </AnimatePresence>
