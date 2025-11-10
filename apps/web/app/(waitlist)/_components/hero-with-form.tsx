@@ -1,12 +1,10 @@
 "use client";
 
-import * as React from "react";
-import type { SVGProps } from "react";
 import { siteConfig } from "@/lib/site";
-import { Button } from "@call/ui/components/button";
-import Link from "next/link";
 import { Badge } from "@call/ui/components/badge";
+import { Button } from "@call/ui/components/button";
 import { Icons } from "@call/ui/components/icons";
+import Link from "next/link";
 
 const HeroWithForm = () => {
   return (
@@ -36,7 +34,7 @@ const HeroWithForm = () => {
         size="sm"
         className="mt-4 border border-gray-200 bg-white text-gray-900 hover:bg-gray-50"
       >
-        <Link href="/app">Access Platform</Link>
+        <Link href="/r">Access Platform</Link>
       </Button>
     </div>
   );
