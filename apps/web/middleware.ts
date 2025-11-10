@@ -1,4 +1,4 @@
-import { getSessionCookie } from "better-auth/cookies";
+// import { getSessionCookie } from "better-auth/cookies";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -10,6 +10,10 @@ const donotGotoProductionRoutes: string[] = ["/app", "/login"];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isProd = process.env.NODE_ENV === "production";
+
+  if (pathname.startsWith("/r")) {
+    return NextResponse.next();
+  }
 
   const isCallId = pathname.split("/")[3];
   const isCallPath = isCallId?.length === 6;
@@ -24,9 +28,9 @@ export async function middleware(request: NextRequest) {
   const isPublic = publicRoutes.has(pathname);
 
   try {
-    const sessionCookie = getSessionCookie(request.headers, {});
+    // const sessionCookie = getSessionCookie(request.headers, {});
 
-    if (isCallPath && !sessionCookie) {
+    if (isCallPath && !isProd) {
       return NextResponse.redirect(
         new URL("/r?meetingId=" + isCallId, request.url)
       );
@@ -37,13 +41,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/r", request.url));
     }
 
-    if (isPublic && sessionCookie && pathname !== "/") {
-      return NextResponse.redirect(new URL("/app", request.url));
-    }
+    // if (isPublic && sessionCookie && pathname !== "/") {
+    //   return NextResponse.redirect(new URL("/app", request.url));
+    // }
 
-    if (isProtected && !sessionCookie) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+    // if (isProtected && !sessionCookie) {
+    //   return NextResponse.redirect(new URL("/login", request.url));
+    // }
   } catch (error) {
     console.error("Auth middleware error:", error);
   }

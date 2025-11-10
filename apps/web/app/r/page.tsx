@@ -28,15 +28,8 @@ function MeetingFormClient() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Join");
   const hasSetMeetingId = useRef(false);
-  const {
-    formData,
-    errors,
-    isLoading,
-    updateFormData,
-    joinMeeting,
-    startMeeting,
-    clearErrors,
-  } = useUnauthenticatedMeeting();
+  const { formData, errors, isLoading, updateFormData, clearErrors } =
+    useUnauthenticatedMeeting();
 
   useEffect(() => {
     if (!hasSetMeetingId.current) {

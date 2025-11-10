@@ -69,7 +69,10 @@ type CallAction =
   | { type: "SET_REMOTE_AUDIOS"; payload: CallState["remoteAudios"] }
   | { type: "SET_PRODUCERS"; payload: any[] }
   | { type: "SET_MY_PRODUCER_IDS"; payload: string[] }
-  | { type: "SET_MY_PRODUCERS"; payload: Array<{ id: string; kind: "audio" | "video"; source: string }> }
+  | {
+      type: "SET_MY_PRODUCERS";
+      payload: Array<{ id: string; kind: "audio" | "video"; source: string }>;
+    }
   | { type: "SET_RECV_TRANSPORT_READY"; payload: boolean }
   | { type: "INCREMENT_UNREAD_CHAT" }
   | { type: "RESET_UNREAD_CHAT" }
@@ -179,7 +182,6 @@ export const CallProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Backward-compatible full context hook (will re-render broadly)
 export const useCallContext = () => {
   const context = useSelectorBaseContext(CallContext);
   if (!context) {
@@ -188,7 +190,6 @@ export const useCallContext = () => {
   return context;
 };
 
-// Selector hooks to minimize re-renders
 export const useCallSelector = <T,>(selector: (state: CallState) => T): T => {
   const selected = useContextSelector(CallContext, (ctx) => {
     if (!ctx) throw new Error("useCallSelector used outside CallProvider");
