@@ -41,7 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           onSectionSelect={handleSectionSelect}
         />
         <SidebarInset>{children}</SidebarInset>
-        <SidebarRight />
+        {/* <SidebarRight /> */}
       </SidebarProvider>
     </Providers>
   );

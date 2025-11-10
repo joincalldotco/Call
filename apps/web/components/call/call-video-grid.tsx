@@ -541,10 +541,13 @@ const OneOrTwo = memo(({ streams }: OneOrTwoProps) => {
             <m.div
               layoutId={id}
               key={id}
-              className={cn("relative size-full overflow-hidden rounded-2xl", {
-                "absolute bottom-8 right-8 z-10 max-h-[200px] max-w-[300px] rounded-lg":
-                  isLocalUser && streams.length > 1,
-              })}
+              className={cn(
+                "relative size-full overflow-hidden rounded-2xl"
+                // {
+                //   "absolute bottom-8 right-8 z-10 max-h-[200px] max-w-[300px] rounded-lg":
+                //     isLocalUser && streams.length > 1,
+                // }
+              )}
             >
               {(isLocalUser && !isCameraOn) || (!isLocalUser && muted) ? (
                 <div className="flex size-full items-center justify-center bg-black">

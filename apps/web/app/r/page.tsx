@@ -6,6 +6,7 @@ import { motion, MotionConfig, type Transition } from "motion/react";
 import { useState, useEffect, useRef, use } from "react";
 import { useUnauthenticatedMeeting } from "@/hooks/use-unauthenticated-meeting";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 const tabs = ["Join", "Start"] as const;
 
@@ -54,9 +55,15 @@ function MeetingFormClient() {
     e.preventDefault();
 
     if (activeTab === "Join") {
-      await joinMeeting(formData);
+      window.location.href = `/r/${formData.meetingId}`;
+      toast.success("Joined meeting successfully");
     } else {
-      await startMeeting(formData);
+      const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+      let code = "";
+      for (let i = 0; i < 6; i++)
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      window.location.href = `/r/${code}`;
+      toast.success("Meeting created successfully");
     }
   };
 
